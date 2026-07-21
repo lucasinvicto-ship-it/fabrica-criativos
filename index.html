@@ -4888,11 +4888,17 @@
     var photoLibraryBlock = document.createElement("div");
     photoLibraryBlock.className = "form-card";
     photoLibraryBlock.style.marginTop = "18px";
+    var aiPhotoDefaultPrompt = (app.settings.visualType==="cash")
+      ? "Realistic professional advertising photo, excited Brazilian person celebrating a win, casino and betting app theme, neon lights, vibrant colors, high quality photography, no text"
+      : "Realistic professional advertising photo, happy Brazilian person using a smartphone banking app, modern lifestyle, natural lighting, high quality photography, no text";
     photoLibraryBlock.innerHTML =
       '<div class="briefing-label">ENVIAR IMAGENS PRÓPRIAS</div>' +
       '<p class="hint">Suas imagens viram criativos na galeria — gere o vídeo depois no botão 🎬 de cada card. Elas se repetem entre os criativos do lote se houver menos fotos que linhas.</p>' +
       '<input type="file" id="fPhotoAdd" accept="image/*" multiple />' +
-      '<div class="lib-row" id="libRow"></div>';
+      '<div class="lib-row" id="libRow"></div>' +
+      '<div class="briefing-divider">Ou gere uma foto com IA (grátis — Together.ai / FLUX.1-schnell)</div>' +
+      '<textarea id="fAiPhotoPrompt" rows="2" placeholder="Descreva a foto em inglês pra melhor resultado...">'+xmlEscape(aiPhotoDefaultPrompt)+'</textarea>' +
+      '<div class="form-actions" style="margin-top:8px"><button type="button" class="btn-sm" id="fAiPhotoBtn">🎨 Gerar foto com IA</button><span class="hint" id="fAiPhotoHint"></span></div>';
     creator.appendChild(photoLibraryBlock);
 
     var previewCard = document.createElement("div");
@@ -4952,6 +4958,36 @@
       Promise.all(files.map(fileToDataUrl)).then(function(urls){
         app.photoLibrary = app.photoLibrary.concat(urls); save(); renderLib(); updatePreview();
         e.target.value = "";
+      });
+    });
+
+    var aiPhotoBtn = photoLibraryBlock.querySelector("#fAiPhotoBtn");
+    var aiPhotoHint = photoLibraryBlock.querySelector("#fAiPhotoHint");
+    aiPhotoBtn.addEventListener("click", function(){
+      var prompt = photoLibraryBlock.querySelector("#fAiPhotoPrompt").value.trim();
+      if(!prompt){ aiPhotoHint.textContent = "Descreve a foto primeiro."; return; }
+      aiPhotoBtn.disabled = true;
+      aiPhotoBtn.textContent = "Gerando... (pode levar alguns segundos)";
+      aiPhotoHint.textContent = "";
+      fetch("/api/generate-photo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: prompt })
+      }).then(function(r){
+        return r.json().then(function(data){
+          if(!r.ok) throw new Error(data.error || ("Erro "+r.status));
+          return data;
+        });
+      }).then(function(data){
+        app.photoLibrary.push(data.imageDataUrl);
+        save(); renderLib(); updatePreview();
+        aiPhotoHint.textContent = "✓ Foto gerada e adicionada à biblioteca.";
+      }).catch(function(err){
+        console.error(err);
+        aiPhotoHint.textContent = "Erro: "+(err.message||err)+" — se estiver testando no Artifact (claude.ai), isso só funciona no site hospedado de verdade.";
+      }).then(function(){
+        aiPhotoBtn.disabled = false;
+        aiPhotoBtn.textContent = "🎨 Gerar foto com IA";
       });
     });
 

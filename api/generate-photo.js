@@ -1,10 +1,9 @@
-// Serverless function (Vercel Node runtime). Calls Together.ai's Flux image model
-// server-side, so the API key never reaches the browser. Tries the free promotional
-// endpoint first, falls back to the standard (paid) endpoint if that fails.
+// Serverless function (Vercel Node runtime). Calls Together.ai's free FLUX.1-schnell-Free
+// model server-side, so the API key never reaches the browser. Only uses the free
+// model — never falls back to a paid one, so this never generates a surprise charge.
 
 const TOGETHER_URL = "https://api.together.xyz/v1/images/generations";
 const MODEL_FREE = "black-forest-labs/FLUX.1-schnell-Free";
-const MODEL_PAID = "black-forest-labs/FLUX.1-schnell";
 
 async function callTogether(model, prompt, apiKey) {
   const r = await fetch(TOGETHER_URL, {
@@ -53,15 +52,9 @@ export default async function handler(req, res) {
   }
 
   try {
-    let b64;
-    try {
-      b64 = await callTogether(MODEL_FREE, prompt, apiKey);
-    } catch (freeErr) {
-      // free/promotional endpoint may be unavailable — fall back to the standard endpoint
-      b64 = await callTogether(MODEL_PAID, prompt, apiKey);
-    }
+    const b64 = await callTogether(MODEL_FREE, prompt, apiKey);
     res.status(200).json({ imageDataUrl: "data:image/png;base64," + b64 });
   } catch (err) {
-    res.status(err.status || 500).json({ error: err.message || "Erro ao gerar imagem" });
+    res.status(err.status || 500).json({ error: (err.message || "Erro ao gerar imagem") + " — o modelo gratuito pode estar com fila cheia, tenta de novo em alguns segundos." });
   }
 }
