@@ -821,6 +821,7 @@
           if(!a.settings) a.settings = {};
           if(!a.settings.videoFormat) a.settings.videoFormat = "story";
           if(a.settings.narrationVoiceLabel==null) a.settings.narrationVoiceLabel = "";
+          if(a.settings.narrationVoiceId==null) a.settings.narrationVoiceId = "";
           a.creatives.forEach(function(c,i){
             if(!c.color) c.color = PALETTE[i % PALETTE.length];
             if(c.photoZoom==null) c.photoZoom = 100;
@@ -2989,6 +2990,27 @@
     });
   }
 
+  function fetchGeneratedVoice(text, voiceId){
+    return fetch("/api/generate-voice", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: text, voiceId: voiceId || undefined })
+    }).then(function(r){
+      if(!r.ok){
+        return r.json().catch(function(){ return {}; }).then(function(errBody){
+          throw new Error(errBody.error || ("Erro "+r.status+" ao gerar narração"));
+        });
+      }
+      return r.blob();
+    }).then(function(blob){
+      return new File([blob], "narracao.mp3", { type: "audio/mpeg" });
+    });
+  }
+
+  function narrationTextFor(cre){
+    return [String(cre.hook||"").split("\n").join(" "), cre.corpo||""].filter(Boolean).join(". ");
+  }
+
   function openVideoModal(app, cre, externalImageUrl){
     var motionIdx;
     if(externalImageUrl){
@@ -3003,14 +3025,25 @@
     overlay.innerHTML =
       '<div class="dl-box">' +
         '<p style="margin-top:0">Vídeo (até 60s) de "'+xmlEscape(String(cre.hook||"").split("\n")[0])+'"</p>' +
-        (app.settings.narrationVoiceLabel ? '<p class="hint">Voz combinada pro projeto: <strong>'+xmlEscape(app.settings.narrationVoiceLabel)+'</strong> — gere a narração com essa voz no ElevenLabs antes de subir aqui.</p>' : '') +
-        '<label>Áudio da narração (mp3/wav/m4a — gerado no ElevenLabs ou outro)</label>' +
-        '<input type="file" id="videoAudioInput" accept="audio/*" />' +
+        '<div class="briefing-templates">' +
+          '<button type="button" class="config-chip active" data-mode="auto">🤖 Gerar automaticamente (ElevenLabs)</button>' +
+          '<button type="button" class="config-chip" data-mode="manual">⬆️ Upload manual</button>' +
+        '</div>' +
+        '<div id="autoVoiceBlock" style="margin-top:12px">' +
+          '<label>Texto da narração</label>' +
+          '<textarea id="autoNarrationText" rows="3">'+xmlEscape(narrationTextFor(cre))+'</textarea>' +
+          '<button type="button" class="btn-sm" id="genNarrationBtn" style="margin-top:8px">🎙️ Gerar narração</button>' +
+          '<div class="hint" id="autoVoiceHint" style="margin-top:6px"></div>' +
+        '</div>' +
+        '<div id="manualVoiceBlock" style="display:none;margin-top:12px">' +
+          '<label>Áudio da narração (mp3/wav/m4a — gerado no ElevenLabs ou outro)</label>' +
+          '<input type="file" id="videoAudioInput" accept="audio/*" />' +
+        '</div>' +
         '<label style="margin-top:14px">Legenda (opcional) — mesmo texto da narração, aparece estilo TikTok</label>' +
-        '<textarea id="videoCaptionInput" rows="3" placeholder="Cole aqui o texto que a narração fala..."></textarea>' +
+        '<textarea id="videoCaptionInput" rows="3" placeholder="Cole aqui o texto que a narração fala...">'+xmlEscape(narrationTextFor(cre))+'</textarea>' +
         '<div class="hint" id="videoHint" style="margin-top:8px"></div>' +
         '<div class="dl-actions" style="margin-top:14px">' +
-          '<button type="button" class="btn-primary" id="genVideoBtn" disabled>⬆️ Escolha um áudio primeiro</button>' +
+          '<button type="button" class="btn-primary" id="genVideoBtn" disabled>🎙️ Gere a narração primeiro</button>' +
           '<button type="button" class="dl-close">Fechar</button>' +
         '</div>' +
       '</div>';
@@ -3021,19 +3054,56 @@
     overlay.querySelector(".dl-close").addEventListener("click", close);
     document.addEventListener("keydown", onKey);
 
+    var mode = "auto";
     var audioInput = overlay.querySelector("#videoAudioInput");
     var genBtn = overlay.querySelector("#genVideoBtn");
     var hint = overlay.querySelector("#videoHint");
+    var autoBlock = overlay.querySelector("#autoVoiceBlock");
+    var manualBlock = overlay.querySelector("#manualVoiceBlock");
+    var genNarrationBtn = overlay.querySelector("#genNarrationBtn");
+    var autoVoiceHint = overlay.querySelector("#autoVoiceHint");
     var chosenFile = null;
+
+    overlay.querySelectorAll("[data-mode]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        mode = btn.getAttribute("data-mode");
+        overlay.querySelectorAll("[data-mode]").forEach(function(b){ b.classList.toggle("active", b===btn); });
+        autoBlock.style.display = mode==="auto" ? "block" : "none";
+        manualBlock.style.display = mode==="manual" ? "block" : "none";
+        chosenFile = null;
+        genBtn.disabled = true;
+        genBtn.textContent = mode==="auto" ? "🎙️ Gere a narração primeiro" : "⬆️ Escolha um áudio primeiro";
+      });
+    });
+
+    genNarrationBtn.addEventListener("click", function(){
+      var text = overlay.querySelector("#autoNarrationText").value.trim();
+      if(!text){ autoVoiceHint.textContent = "Escreve o texto da narração primeiro."; return; }
+      genNarrationBtn.disabled = true;
+      genNarrationBtn.textContent = "Gerando narração...";
+      autoVoiceHint.textContent = "";
+      fetchGeneratedVoice(text, app.settings.narrationVoiceId).then(function(file){
+        chosenFile = file;
+        genBtn.disabled = false;
+        genBtn.textContent = "Gerar vídeo";
+        autoVoiceHint.innerHTML = "✓ Narração gerada — <audio controls style=\"height:28px;vertical-align:middle\" src=\""+URL.createObjectURL(file)+"\"></audio>";
+      }).catch(function(err){
+        console.error(err);
+        autoVoiceHint.textContent = "Erro: "+(err.message||err)+" — se estiver testando no Artifact (claude.ai), isso só funciona no site hospedado de verdade.";
+      }).then(function(){
+        genNarrationBtn.disabled = false;
+        genNarrationBtn.textContent = "🎙️ Gerar narração";
+      });
+    });
+
     audioInput.addEventListener("change", function(e){
       chosenFile = e.target.files && e.target.files[0];
       genBtn.disabled = !chosenFile;
       genBtn.textContent = chosenFile ? "Gerar vídeo" : "⬆️ Escolha um áudio primeiro";
-      hint.textContent = chosenFile ? ("Arquivo: "+chosenFile.name) : "";
     });
     genBtn.addEventListener("click", function(){
       if(!chosenFile) return;
-      genBtn.disabled = true; audioInput.disabled = true;
+      genBtn.disabled = true; audioInput.disabled = true; genNarrationBtn.disabled = true;
       genBtn.textContent = "Gravando... 0%";
       var captionText = overlay.querySelector("#videoCaptionInput").value.trim();
       renderPosterVideoBlob(app, cre, chosenFile, function(t){
@@ -3050,7 +3120,7 @@
       }).catch(function(err){
         console.error(err);
         hint.textContent = "Erro: "+(err.message||err);
-        genBtn.disabled = false; audioInput.disabled = false;
+        genBtn.disabled = false; audioInput.disabled = false; genNarrationBtn.disabled = false;
         genBtn.textContent = "Gerar vídeo";
       });
     });
@@ -3162,14 +3232,22 @@
     overlay.innerHTML =
       '<div class="dl-box" style="max-width:560px;max-height:85vh;overflow-y:auto">' +
         '<p style="margin-top:0">Gerar vídeos do lote (até 60s cada)</p>' +
-        (app.settings.narrationVoiceLabel ? '<p class="hint">Voz combinada pro projeto: <strong>'+xmlEscape(app.settings.narrationVoiceLabel)+'</strong> — gere todos os áudios com essa voz no ElevenLabs antes de subir aqui.</p>' : '') +
-        '<label>Selecione os áudios de narração — a ordem dos arquivos é pareada com a ordem dos criativos abaixo</label>' +
-        '<input type="file" id="batchAudioInput" accept="audio/*" multiple />' +
-        '<div id="pairList" style="margin-top:12px"></div>' +
+        '<div class="briefing-templates">' +
+          '<button type="button" class="config-chip active" data-mode="auto">🤖 Gerar narrações automaticamente (ElevenLabs)</button>' +
+          '<button type="button" class="config-chip" data-mode="manual">⬆️ Upload manual</button>' +
+        '</div>' +
+        '<div id="autoBatchBlock" style="margin-top:12px">' +
+          '<p class="hint">Cada criativo usa o próprio Hook + Corpo como texto da narração — nenhum arquivo pra escolher.</p>' +
+        '</div>' +
+        '<div id="manualBatchBlock" style="display:none;margin-top:12px">' +
+          '<label>Selecione os áudios de narração — a ordem dos arquivos é pareada com a ordem dos criativos abaixo</label>' +
+          '<input type="file" id="batchAudioInput" accept="audio/*" multiple />' +
+          '<div id="pairList" style="margin-top:12px"></div>' +
+        '</div>' +
         '<label style="margin-top:14px">Legenda (opcional) — mesmo texto da narração, aparece estilo TikTok em todos os vídeos do lote</label>' +
         '<textarea id="batchCaptionInput" rows="3" placeholder="Cole aqui o texto que a narração fala..."></textarea>' +
         '<div class="dl-actions" style="margin-top:14px">' +
-          '<button type="button" class="btn-primary" id="genBatchVideoBtn" disabled>⬆️ Escolha os áudios primeiro</button>' +
+          '<button type="button" class="btn-primary" id="genBatchVideoBtn">Gerar vídeos</button>' +
           '<button type="button" class="dl-close">Fechar</button>' +
         '</div>' +
       '</div>';
@@ -3180,10 +3258,25 @@
     overlay.querySelector(".dl-close").addEventListener("click", close);
     document.addEventListener("keydown", onKey);
 
+    var mode = "auto";
+    var autoBlock = overlay.querySelector("#autoBatchBlock");
+    var manualBlock = overlay.querySelector("#manualBatchBlock");
     var audioInput = overlay.querySelector("#batchAudioInput");
     var pairList = overlay.querySelector("#pairList");
     var genBtn = overlay.querySelector("#genBatchVideoBtn");
     var files = [];
+
+    overlay.querySelectorAll("[data-mode]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        mode = btn.getAttribute("data-mode");
+        overlay.querySelectorAll("[data-mode]").forEach(function(b){ b.classList.toggle("active", b===btn); });
+        autoBlock.style.display = mode==="auto" ? "block" : "none";
+        manualBlock.style.display = mode==="manual" ? "block" : "none";
+        genBtn.disabled = mode==="manual" && files.length===0;
+        genBtn.textContent = mode==="manual" && files.length===0 ? "⬆️ Escolha os áudios primeiro" : "Gerar vídeos";
+      });
+    });
+
     audioInput.addEventListener("change", function(e){
       files = Array.from(e.target.files||[]).sort(function(a,b){ return a.name.localeCompare(b.name); });
       pairList.innerHTML = app.creatives.map(function(cre,i){
@@ -3195,6 +3288,7 @@
       genBtn.disabled = files.length===0;
       genBtn.textContent = files.length ? "Gerar vídeos" : "⬆️ Escolha os áudios primeiro";
     });
+
     genBtn.addEventListener("click", function(){
       genBtn.disabled = true; audioInput.disabled = true;
       var n = app.creatives.length;
@@ -3205,17 +3299,32 @@
       for(var i=0;i<n;i++){
         (function(i){
           chain = chain.then(function(){
-            genBtn.textContent = "Gerando "+(i+1)+"/"+n+"...";
             var cre = app.creatives[i];
-            var audioFile = files[i % files.length];
-            return renderPosterVideoBlob(app, cre, audioFile, function(t){
-              genBtn.textContent = "Gerando "+(i+1)+"/"+n+"... "+Math.round(t*100)+"%";
-            }, captionText, undefined, motionSeq[i]).then(function(result){
-              var blob = result.videoBlob;
-              var ext = (blob.type||"").indexOf("mp4")>-1 ? ".mp4" : ".webm";
-              videoBlobsStore[cre.id] = { blob: blob, filename: creativeFilename(app, cre, i+1).replace(/\.png$/,ext), imageDataUrl: result.imageDataUrl };
-              done++;
-            }).catch(function(err){ console.error("Falha no vídeo "+(i+1), err); });
+            if(mode==="auto"){
+              genBtn.textContent = "Gerando narração "+(i+1)+"/"+n+"...";
+              return fetchGeneratedVoice(narrationTextFor(cre), app.settings.narrationVoiceId).then(function(audioFile){
+                genBtn.textContent = "Gerando vídeo "+(i+1)+"/"+n+"...";
+                return renderPosterVideoBlob(app, cre, audioFile, function(t){
+                  genBtn.textContent = "Gerando "+(i+1)+"/"+n+"... "+Math.round(t*100)+"%";
+                }, captionText || narrationTextFor(cre), undefined, motionSeq[i]);
+              }).then(function(result){
+                var blob = result.videoBlob;
+                var ext = (blob.type||"").indexOf("mp4")>-1 ? ".mp4" : ".webm";
+                videoBlobsStore[cre.id] = { blob: blob, filename: creativeFilename(app, cre, i+1).replace(/\.png$/,ext), imageDataUrl: result.imageDataUrl };
+                done++;
+              }).catch(function(err){ console.error("Falha no vídeo "+(i+1), err); });
+            } else {
+              genBtn.textContent = "Gerando "+(i+1)+"/"+n+"...";
+              var audioFile = files[i % files.length];
+              return renderPosterVideoBlob(app, cre, audioFile, function(t){
+                genBtn.textContent = "Gerando "+(i+1)+"/"+n+"... "+Math.round(t*100)+"%";
+              }, captionText, undefined, motionSeq[i]).then(function(result){
+                var blob = result.videoBlob;
+                var ext = (blob.type||"").indexOf("mp4")>-1 ? ".mp4" : ".webm";
+                videoBlobsStore[cre.id] = { blob: blob, filename: creativeFilename(app, cre, i+1).replace(/\.png$/,ext), imageDataUrl: result.imageDataUrl };
+                done++;
+              }).catch(function(err){ console.error("Falha no vídeo "+(i+1), err); });
+            }
           });
         })(i);
       }
@@ -4876,10 +4985,11 @@
     narrationBlock.className = "block";
     narrationBlock.innerHTML =
       '<div class="block-head"><span class="block-title">🎙️ Vídeo narrado</span>' +
-      '<span class="block-sub">preferências do lote — a narração continua exigindo upload manual do áudio (sem geração automática)</span></div>' +
+      '<span class="block-sub">preferências do lote — se o site estiver hospedado com a chave do ElevenLabs configurada, a narração é gerada automática</span></div>' +
       '<div class="shared-fields" style="margin-top:10px">' +
         '<div><label>Idioma da narração</label><input value="'+xmlEscape(app.settings.locale==="es-MX" ? "Espanhol (México)" : "Português (Brasil)")+'" disabled /></div>' +
-        '<div><label>Voz (rótulo, pra lembrar qual gerar no ElevenLabs)</label><input id="narrVoiceLabel" placeholder="Ex: Feminina — calma" value="'+xmlEscape(app.settings.narrationVoiceLabel||"")+'" /></div>' +
+        '<div><label>Voz (rótulo, só pra lembrar)</label><input id="narrVoiceLabel" placeholder="Ex: Feminina — calma" value="'+xmlEscape(app.settings.narrationVoiceLabel||"")+'" /></div>' +
+        '<div><label>Voice ID do ElevenLabs</label><input id="narrVoiceId" placeholder="Ex: 21m00Tcm4TlvDq8ikWAM" value="'+xmlEscape(app.settings.narrationVoiceId||"")+'" /></div>' +
         '<div><label>Formato do vídeo/GIF</label><select id="narrFormatSel">' +
           '<option value="story"'+(app.settings.videoFormat!=="square"?" selected":"")+'>Story (1080×1920)</option>' +
           '<option value="square"'+(app.settings.videoFormat==="square"?" selected":"")+'>Quadrado (1080×1080)</option>' +
@@ -4888,6 +4998,9 @@
     panel.appendChild(narrationBlock);
     narrationBlock.querySelector("#narrVoiceLabel").addEventListener("input", function(e){
       app.settings.narrationVoiceLabel = e.target.value; save();
+    });
+    narrationBlock.querySelector("#narrVoiceId").addEventListener("input", function(e){
+      app.settings.narrationVoiceId = e.target.value.trim(); save();
     });
     narrationBlock.querySelector("#narrFormatSel").addEventListener("change", function(e){
       app.settings.videoFormat = e.target.value; save();
