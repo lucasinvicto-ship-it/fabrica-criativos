@@ -1,47 +1,13 @@
-// Serverless function (Vercel Node runtime). Calls Together.ai's free FLUX.1-schnell-Free
-// model server-side, so the API key never reaches the browser. Only uses the free
-// model — never falls back to a paid one, so this never generates a surprise charge.
+// Serverless function (Vercel Node runtime). Proxies Pollinations.ai's free image
+// endpoint server-side (avoids browser CORS issues and keeps the canvas untainted
+// for PNG/video/GIF export). Pollinations needs no signup, no API key, no card —
+// genuinely free, rate-limited to a few requests per minute for anonymous use.
 
-const TOGETHER_URL = "https://api.together.xyz/v1/images/generations";
-const MODEL_FREE = "black-forest-labs/FLUX.1-schnell-Free";
-
-async function callTogether(model, prompt, apiKey) {
-  const r = await fetch(TOGETHER_URL, {
-    method: "POST",
-    headers: {
-      "Authorization": "Bearer " + apiKey,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      model: model,
-      prompt: prompt,
-      width: 1024,
-      height: 1280,
-      steps: 4,
-      n: 1,
-      response_format: "b64_json"
-    })
-  });
-  const data = await r.json();
-  if (!r.ok) {
-    const err = new Error((data && data.error && data.error.message) || "Together.ai error");
-    err.status = r.status;
-    throw err;
-  }
-  const b64 = data && data.data && data.data[0] && data.data[0].b64_json;
-  if (!b64) throw new Error("Resposta da Together.ai sem imagem");
-  return b64;
-}
+const POLLINATIONS_BASE = "https://image.pollinations.ai/prompt/";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
-    return;
-  }
-
-  const apiKey = process.env.TOGETHER_API_KEY;
-  if (!apiKey) {
-    res.status(500).json({ error: "TOGETHER_API_KEY não configurada no servidor" });
     return;
   }
 
@@ -52,9 +18,19 @@ export default async function handler(req, res) {
   }
 
   try {
-    const b64 = await callTogether(MODEL_FREE, prompt, apiKey);
-    res.status(200).json({ imageDataUrl: "data:image/png;base64," + b64 });
+    const url = POLLINATIONS_BASE + encodeURIComponent(prompt) +
+      "?width=1024&height=1280&nologo=true&model=flux&seed=" + Math.floor(Math.random() * 1000000);
+    const r = await fetch(url);
+    if (!r.ok) {
+      const errText = await r.text().catch(function () { return ""; });
+      res.status(r.status).json({ error: "Pollinations error " + r.status + (errText ? ": " + errText : "") });
+      return;
+    }
+    const contentType = r.headers.get("content-type") || "image/jpeg";
+    const arrayBuffer = await r.arrayBuffer();
+    const base64 = Buffer.from(arrayBuffer).toString("base64");
+    res.status(200).json({ imageDataUrl: "data:" + contentType + ";base64," + base64 });
   } catch (err) {
-    res.status(err.status || 500).json({ error: (err.message || "Erro ao gerar imagem") + " — o modelo gratuito pode estar com fila cheia, tenta de novo em alguns segundos." });
+    res.status(500).json({ error: err.message || "Erro ao gerar imagem" });
   }
 }
