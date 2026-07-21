@@ -69,8 +69,44 @@
 
   .app-shell{ display:flex; align-items:flex-start; min-height:100vh; }
 
-  .rail{ width:190px; flex:0 0 190px; padding:28px 0 28px 18px; position:sticky; top:0; max-height:100vh; overflow-y:auto;
+  .rail{ width:220px; flex:0 0 220px; padding:22px 16px; position:sticky; top:0; max-height:100vh; overflow-y:auto;
     display:flex; flex-direction:column; }
+
+  .rail-brand{ display:flex; align-items:center; gap:10px; padding:6px 4px 20px; }
+  .rail-brand-icon{ width:32px; height:32px; border-radius:9px; background:linear-gradient(135deg,var(--accent-strong),#6366f1);
+    display:flex; align-items:center; justify-content:center; font-size:16px; color:#fff; flex:0 0 32px; }
+  .rail-brand-name{ font-family:var(--font-display); font-weight:700; font-size:1rem; color:var(--text); line-height:1.2; }
+  .rail-brand-sub{ font-size:.68rem; color:var(--text-faint); }
+
+  .rail-project-select{ margin-bottom:18px; background:var(--surface-2); border:1px solid var(--border-soft);
+    border-radius:10px; padding:8px 10px; position:relative; }
+  .rail-project-label{ font-size:.62rem; letter-spacing:1px; color:var(--text-faint); margin-bottom:3px; }
+  .rail-project-btn{ width:100%; display:flex; align-items:center; justify-content:space-between; background:transparent;
+    box-shadow:none; padding:2px 0; color:var(--text); font-weight:700; font-size:.88rem; }
+  .rail-project-btn .chev{ color:var(--text-faint); font-weight:400; }
+  .rail-project-dropdown{ position:absolute; left:0; right:0; top:100%; margin-top:6px; background:var(--surface-2);
+    border:1px solid var(--border-soft); border-radius:10px; padding:6px; z-index:20; box-shadow:0 12px 28px -8px rgba(0,0,0,.5); }
+  .rail-project-dropdown-item{ display:flex; align-items:center; gap:8px; padding:8px 9px; border-radius:7px; cursor:pointer; font-size:.84rem; }
+  .rail-project-dropdown-item:hover{ background:var(--surface-3); }
+  .rail-project-dropdown-item.active{ color:var(--accent-strong); font-weight:700; }
+  .rail-project-dropdown-add{ margin-top:4px; padding-top:6px; border-top:1px solid var(--border-soft); }
+  .rail-project-dropdown-add input{ font-size:.8rem; margin-bottom:6px; }
+
+  .rail-nav{ display:flex; flex-direction:column; gap:2px; }
+  .rail-nav-item{ display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:8px; cursor:pointer;
+    color:var(--text-muted); border:1px solid transparent; background:transparent; box-shadow:none; font-size:.87rem; text-align:left; width:100%; }
+  .rail-nav-item:hover{ color:var(--text); background:var(--surface-3); }
+  .rail-nav-item.active{ background:linear-gradient(135deg,var(--accent-strong),#6366f1); color:#fff; font-weight:600; }
+  .rail-nav-item .nav-ic{ width:16px; text-align:center; flex:0 0 16px; }
+
+  .rail-footer{ margin-top:auto; padding-top:16px; }
+  .rail-footer-icons{ display:flex; gap:8px; margin-bottom:12px; }
+  .rail-icon-btn{ width:34px; height:34px; border-radius:9px; background:var(--surface-2); border:1px solid var(--border-soft);
+    color:var(--text-muted); display:flex; align-items:center; justify-content:center; box-shadow:none; padding:0; }
+  .rail-icon-btn:hover{ color:var(--text); border-color:var(--accent); }
+  .rail-user-name{ font-size:.84rem; font-weight:600; color:var(--text); }
+  .rail-user-logout{ background:transparent; box-shadow:none; padding:0; color:var(--text-faint); font-size:.78rem; margin-top:2px; }
+  .rail-user-logout:hover{ color:#e0968a; }
   .rail-title{ font-family:var(--font-display); font-weight:700; font-size:1rem; color:var(--text); padding:0 12px 16px 4px; }
   .tab{ display:flex; align-items:center; gap:9px; padding:9px 12px; margin-bottom:2px;
     border-radius:8px; cursor:pointer; color:var(--text-muted); border:1px solid transparent; }
@@ -100,6 +136,16 @@
   .panel{ display:none; }
   .panel.active{ display:block; }
 
+  .fabrica-head{ margin-bottom:20px; }
+  .fabrica-head h1{ font-family:var(--font-display); font-size:1.7rem; margin:0 0 2px; }
+  .collapsible-bar{ display:flex; align-items:center; justify-content:space-between; width:100%; text-align:left;
+    background:var(--surface-2); border:1px solid var(--border-soft); border-radius:10px; padding:12px 16px;
+    margin-top:10px; color:var(--text-muted); font-size:.85rem; }
+  .collapsible-bar:hover{ border-color:var(--accent); color:var(--text); }
+  .collapsible-bar strong{ color:var(--text); }
+  .collapsible-body{ padding:12px 16px; font-size:.83rem; color:var(--text-muted); background:var(--surface-3);
+    border-radius:0 0 10px 10px; margin-top:-6px; }
+
   .app-head{ display:flex; align-items:center; gap:18px; flex-wrap:wrap; margin-bottom:18px; }
   .app-name{ font-family:var(--font-display); font-size:1.5rem; font-weight:700; background:transparent;
     box-shadow:none; padding:2px 3px; width:auto; min-width:100px; border-radius:6px; }
@@ -113,6 +159,11 @@
 
   .creator{ display:grid; grid-template-columns:1fr 300px; gap:18px; margin-bottom:24px; align-items:start; }
   .form-card{ background:var(--surface-2); border-radius:14px; padding:20px; border:1px solid var(--border-soft); box-shadow:var(--card-shadow); }
+  .briefing-label{ font-size:.7rem; letter-spacing:1.5px; color:var(--text-faint); margin-bottom:10px; text-transform:uppercase; font-weight:700; }
+  .briefing-templates{ display:flex; gap:8px; flex-wrap:wrap; margin:8px 0 4px; }
+  .briefing-divider{ margin:20px 0 6px; padding-top:16px; border-top:1px solid var(--border-soft);
+    font-size:.78rem; color:var(--text-faint); font-weight:600; }
+  .gen-lote-btn{ background:linear-gradient(135deg,#2563eb,#7c3aed) !important; border:none !important; }
 
   .bulk-textarea{ min-height:130px; }
   .shared-fields{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:16px; }
@@ -128,7 +179,7 @@
   .lib-row{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
   .external-gallery{ display:flex; gap:14px; flex-wrap:wrap; margin-top:12px; }
   .ext-item{ width:150px; background:var(--surface-2); border-radius:10px; padding:8px; }
-  .ext-item img{ width:100%; aspect-ratio:4/5; object-fit:cover; border-radius:6px; display:block; }
+  .ext-item img{ width:100%; aspect-ratio:9/16; object-fit:cover; border-radius:6px; display:block; }
   .ext-name{ font-size:.72rem; color:var(--muted); margin-top:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .ext-actions{ display:flex; flex-direction:column; gap:5px; margin-top:6px; }
   .ext-actions button{ font-size:.72rem; padding:5px 6px; }
@@ -138,26 +189,104 @@
     color:#fff; font-size:9px; line-height:16px; text-align:center; padding:0; box-shadow:none; }
 
   .preview-card{ position:sticky; top:28px; }
-  .preview-poster{ width:100%; aspect-ratio:4/5; border-radius:14px; overflow:hidden; background:#fff;
+  .preview-poster{ width:100%; aspect-ratio:9/16; border-radius:14px; overflow:hidden; background:#fff;
     border:1px solid var(--border-soft); box-shadow:var(--card-shadow); }
   .preview-poster svg{ width:100%; height:100%; display:block; }
   .preview-label{ text-align:center; font-size:.72rem; color:var(--text-faint); margin-top:8px; letter-spacing:.04em; }
 
   section.block{ margin-bottom:30px; }
+  .config-page{ max-width:960px; }
+  .config-tabs{ display:flex; gap:8px; margin-bottom:22px; }
+  .config-tab-btn{ padding:8px 18px; border-radius:999px; background:var(--surface-2); border:1px solid var(--border-soft);
+    color:var(--text-muted); font-size:.85rem; font-weight:600; cursor:pointer; }
+  .config-tab-btn.active{ background:var(--accent); color:#04140a; border-color:var(--accent); }
+  .config-block{ background:var(--surface-2); border:1px solid var(--border-soft); border-radius:14px; padding:22px; margin-bottom:20px; }
+  .config-block h3{ margin:0 0 4px; font-size:.72rem; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted); }
+  .config-block .config-desc{ margin:0 0 16px; font-size:.85rem; color:var(--text-muted); }
+  .config-row{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
+  .config-row input{ width:100%; }
+  .config-list-item{ display:flex; align-items:center; justify-content:space-between; padding:12px 14px;
+    background:var(--surface-3); border-radius:10px; margin-bottom:8px; }
+  .config-list-item .name{ font-weight:700; }
+  .config-list-item .sub{ font-size:.78rem; color:var(--text-muted); margin-top:2px; }
+  .config-list-item .rm{ color:#e06a5a; background:transparent; border:none; cursor:pointer; font-size:.8rem; font-weight:600; }
+
+  .dash-stats{ display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:26px; }
+  .dash-stat-card{ background:var(--surface-2); border:1px solid var(--border-soft); border-radius:14px; padding:18px; }
+  .dash-stat-card .num{ font-family:var(--font-display); font-size:1.9rem; font-weight:700; color:var(--text); font-variant-numeric:tabular-nums; }
+  .dash-stat-card .lbl{ font-size:.78rem; color:var(--text-muted); margin-top:4px; }
+  .dash-project-list{ display:flex; flex-direction:column; gap:10px; }
+  .dash-project-item{ display:flex; align-items:center; justify-content:space-between; padding:14px 16px;
+    background:var(--surface-2); border:1px solid var(--border-soft); border-radius:12px; }
+  .dash-project-item .name{ font-weight:700; }
+  .dash-project-item .sub{ font-size:.78rem; color:var(--text-muted); margin-top:2px; }
+  .dash-project-item .badges{ display:flex; gap:6px; }
+  .dash-badge{ font-size:.72rem; font-weight:700; padding:3px 9px; border-radius:999px; background:var(--accent-wash); color:var(--accent-strong); }
+
+  .mock-banner{ background:rgba(217,164,65,0.14); color:#d9a441; padding:10px 16px; border-radius:10px; font-size:.82rem; margin-bottom:20px; display:flex; align-items:center; gap:8px; }
+
+  .subidas-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:16px; }
+  .subidas-card{ background:var(--surface-2); border-radius:12px; overflow:hidden; border:1px solid var(--border-soft); box-shadow:var(--card-shadow); }
+  .subidas-card .card-poster{ cursor:default; }
+  .subidas-card-meta{ padding:10px 10px 4px; }
+  .subidas-card-meta .proj{ font-size:.72rem; font-weight:700; color:var(--accent-strong); text-transform:uppercase; letter-spacing:.4px; }
+  .subidas-card-meta .hook{ font-size:.78rem; color:var(--text-muted); margin-top:2px; }
+  .subidas-card-actions{ display:flex; gap:5px; padding:8px 10px; flex-wrap:wrap; }
+  .subidas-card-actions button{ flex:1; min-width:70px; font-size:.72rem; padding:6px 4px; }
+
+  .copies-grid{ display:flex; flex-direction:column; gap:10px; }
+  .copy-item{ background:var(--surface-2); border:1px solid var(--border-soft); border-radius:12px; padding:14px 16px; }
+  .copy-item .hook{ font-weight:700; }
+  .copy-item .corpo{ font-size:.82rem; color:var(--text-muted); margin-top:4px; white-space:pre-line; }
+  .copy-item .cta{ font-size:.78rem; color:var(--accent-strong); font-weight:600; margin-top:6px; }
+  .copy-item-actions{ display:flex; gap:8px; margin-top:10px; }
+  .config-chip-row{ display:flex; gap:8px; flex-wrap:wrap; margin:10px 0; }
+  .config-chip{ padding:6px 12px; border-radius:8px; background:var(--surface-3); border:1px solid var(--border-soft);
+    font-size:.76rem; color:var(--text-muted); cursor:pointer; }
+  .config-chip.active{ background:var(--accent-wash); color:var(--accent-strong); border-color:var(--accent); }
+  .config-banner{ padding:12px 16px; border-radius:10px; font-size:.83rem; margin-bottom:16px; }
+  .config-banner.warn{ background:rgba(217,164,65,0.14); color:#d9a441; }
+  .config-banner.info{ background:var(--accent-wash); color:var(--accent-strong); }
+  .active-nav{ color:var(--accent-strong) !important; }
   .block-head{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:14px; }
   .block-title{ font-family:var(--font-display); font-weight:700; font-size:1.05rem; color:var(--text); }
   .block-sub{ font-size:.78rem; color:var(--text-faint); }
 
+  .review-tabs{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+  .review-tab-btn{ font-size:.8rem; font-weight:600; padding:7px 14px; border-radius:999px; background:var(--surface-2);
+    border:1px solid var(--border-soft); color:var(--text-muted); cursor:pointer; }
+  .review-tab-btn .cnt{ opacity:.7; font-weight:500; }
+  .review-tab-btn.active{ background:var(--accent-wash); color:var(--accent-strong); border-color:var(--accent); }
+  .review-hint{ font-size:.78rem; color:var(--text-faint); margin-bottom:12px; }
+  .bulk-bar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:10px 12px; border-radius:10px;
+    background:var(--surface-2); border:1px solid var(--border-soft); margin-bottom:14px; font-size:.82rem; }
+  .bulk-bar .bulk-count{ font-weight:700; color:var(--text); }
+  .bulk-bar button.link-btn{ background:none; border:none; padding:0; color:var(--accent-strong); font-size:.8rem; cursor:pointer; text-decoration:underline; }
+  .bulk-bar .bulk-actions{ margin-left:auto; display:flex; gap:8px; }
+  .bulk-bar .btn-approve{ background:rgba(123,168,137,.18); color:#5f9b73; border:1px solid rgba(123,168,137,.35); font-weight:700; padding:6px 12px; border-radius:8px; }
+  .bulk-bar .btn-reject{ background:rgba(194,105,90,.16); color:#c26b5a; border:1px solid rgba(194,105,90,.32); font-weight:700; padding:6px 12px; border-radius:8px; }
+
   .gallery{ display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:16px; }
-  .card{ background:var(--surface-2); border-radius:12px; overflow:hidden; border:1px solid var(--border-soft); box-shadow:var(--card-shadow); }
-  .card-poster{ width:100%; aspect-ratio:4/5; background:#fff; display:block; }
+  .card{ background:var(--surface-2); border-radius:12px; overflow:hidden; border:1px solid var(--border-soft); box-shadow:var(--card-shadow); position:relative; }
+  .card.selected{ box-shadow:0 0 0 2px var(--accent-strong), var(--card-shadow); }
+  .card-select{ position:absolute; top:8px; left:8px; z-index:2; width:20px; height:20px; cursor:pointer; accent-color:var(--accent-strong); }
+  .card-review-badge{ position:absolute; top:8px; right:8px; z-index:2; font-size:.68rem; font-weight:700; padding:3px 8px; border-radius:999px; }
+  .card-review-badge.rb-ativo{ background:rgba(127,147,172,.85); color:#fff; }
+  .card-review-badge.rb-rejeitado{ background:rgba(194,105,90,.9); color:#fff; }
+  .card-review-badge.rb-utilizado{ background:rgba(123,168,137,.9); color:#fff; }
+  .review-row{ display:flex; gap:5px; padding:6px 8px 0; }
+  .review-row button{ flex:1; font-size:.72rem; padding:6px 4px; border-radius:6px; font-weight:700; }
+  .review-row .btn-rev-reject{ background:rgba(194,105,90,.14); color:#c26b5a; border:1px solid rgba(194,105,90,.28); }
+  .review-row .btn-rev-approve{ background:rgba(123,168,137,.16); color:#5f9b73; border:1px solid rgba(123,168,137,.3); }
+  .review-row .btn-rev-undo{ background:var(--surface-3); color:var(--text-muted); border:1px solid var(--border-soft); }
+  .card-poster{ width:100%; aspect-ratio:9/16; background:#fff; display:block; }
   .card-poster svg{ width:100%; height:100%; display:block; }
   .status-row{ padding:8px 8px 0; }
   .copy-row{ display:flex; gap:5px; padding:6px 8px 0; }
   .copy-row .copy-target{ flex:1; font-size:.74rem; padding:5px 6px; }
   .copy-row .btn-copy-app{ flex:0 0 auto; font-size:.72rem; padding:5px 8px; white-space:nowrap; }
-  .video-row{ padding:6px 8px 0; }
-  .video-row .btn-video{ width:100%; font-size:.74rem; padding:7px 6px; }
+  .video-row{ padding:6px 8px 0; display:flex; flex-direction:column; }
+  .video-row .btn-video, .video-row .btn-gif{ width:100%; font-size:.74rem; padding:7px 6px; }
   .dl-box label{ display:block; margin-top:4px; }
   .dl-box input[type=file]{ margin-top:6px; width:100%; }
   .status-row select.status-select{ font-size:.76rem; font-weight:700; padding:5px 8px; text-align:center;
@@ -215,27 +344,38 @@
 </style>
 
 <div class="app-shell">
-  <nav class="rail" aria-label="Aplicativos">
-    <div class="rail-title">Fábrica de Criativos</div>
-    <div id="tabList"></div>
-    <div class="add-app">
-      <button class="add-app-btn" id="addAppToggle" type="button">+ Novo projeto</button>
-      <div class="add-app-form" id="addAppForm">
-        <input type="text" id="newAppName" placeholder="Nome do projeto" />
-        <div class="row">
-          <button type="button" class="btn-primary btn-sm" id="addAppConfirm">Adicionar</button>
-          <button type="button" class="btn-sm" id="addAppCancel">Cancelar</button>
-        </div>
+  <nav class="rail" aria-label="Navegação">
+    <div class="rail-brand">
+      <span class="rail-brand-icon">✦</span>
+      <div>
+        <div class="rail-brand-name">I'm Inevitable</div>
+        <div class="rail-brand-sub">Ads Manager</div>
       </div>
     </div>
-    <div class="theme-toggle-wrap">
-      <button type="button" id="exportDataBtn" class="theme-toggle-btn">⭳ Exportar dados</button>
-      <button type="button" id="importDataBtn" class="theme-toggle-btn" style="margin-top:6px">⭱ Importar dados</button>
-      <input type="file" id="importDataInput" accept="application/json" style="display:none" />
-      <button type="button" id="themeToggle" class="theme-toggle-btn" style="margin-top:6px">
-        <span id="themeToggleIcon">☾</span> <span id="themeToggleLabel">Modo escuro</span>
+
+    <div class="rail-project-select">
+      <div class="rail-project-label">PROJETO</div>
+      <button type="button" class="rail-project-btn" id="projectSelectBtn">
+        <span id="projectSelectName">—</span>
+        <span class="chev">▾</span>
       </button>
+      <div class="rail-project-dropdown" id="projectDropdown" style="display:none"></div>
     </div>
+
+    <div class="rail-nav" id="railNav"></div>
+
+    <div class="rail-footer">
+      <div class="rail-footer-icons">
+        <button type="button" id="themeToggle" class="rail-icon-btn" title="Alternar tema">☾</button>
+        <button type="button" id="notifBtn" class="rail-icon-btn" title="Notificações">🔔</button>
+      </div>
+      <div class="rail-user">
+        <div class="rail-user-name" id="railUserName">Minha conta</div>
+        <button type="button" class="rail-user-logout" id="railLogoutBtn">Sair</button>
+      </div>
+    </div>
+
+    <input type="file" id="importDataInput" accept="application/json" style="display:none" />
   </nav>
 
   <main class="main" id="mainPanels"></main>
@@ -459,10 +599,12 @@
   function seedCreative(hook, corpo, valor, cta, photo, color, cardName, layout){
     return { id: uid("cre"), hook: hook, corpo: corpo, valor: valor, cta: cta,
       photo: photo || null, photoZoom: 100, photoOffsetX: 0, photoOffsetY: 0, color: color || PALETTE[0],
-      cardName: cardName || "", layout: layout || "split", status: "testando" };
+      cardName: cardName || "", layout: layout || "split", status: "testando", reviewStatus: "ativo" };
   }
   var CREATIVE_STATUSES = ["testando","venceu","pausado"];
   function creativeStatusLabel(s){ return { testando:"Testando", venceu:"Venceu", pausado:"Pausado" }[s] || s; }
+  var REVIEW_STATUSES = ["ativo","rejeitado","utilizado"];
+  function reviewStatusLabel(s){ return { ativo:"Ativos", rejeitado:"Rejeitados", utilizado:"Utilizados" }[s] || s; }
 
   var CASH_PALETTE = ["#facc15","#dc2626","#16a34a","#2563eb","#db2777","#ea580c"];
   function nextColor(app){
@@ -526,6 +668,21 @@
     };
   }
 
+  function defaultTemplates(){
+    return [
+      { id:"tpl_cartao", icon:"💳", label:"Cartão de crédito (app)",
+        objetivo: "[NOME DO APP] (BR): app install para público de score baixo e negativados. Objetivo: instalar o app e consultar o limite.",
+        bulk: defaultDraft("R$ 3.000").bulk, corpo: defaultDraft("R$ 3.000").corpo, valor: "R$ 3.000", cta: "Baixar app" },
+      { id:"tpl_emprestimo", icon:"💰", label:"Empréstimo (chatbot)",
+        objetivo: "[NOME DO APP] (BR): empréstimo pessoal via chatbot/app. Objetivo: cadastro e consulta do valor liberado.",
+        bulk: defaultDraftEmprestimo("R$ 5.000").bulk, corpo: defaultDraftEmprestimo("R$ 5.000").corpo, valor: "R$ 5.000", cta: "Ver opções" },
+      { id:"tpl_generico", icon:"📱", label:"App genérico",
+        objetivo: "[NOME DO APP]: app genérico. Objetivo: instalar o app.",
+        bulk: "TÍTULO PRINCIPAL\nDO SEU ANÚNCIO | Subtítulo de apoio\nBenefício 1\nBenefício 2 | Baixar app",
+        corpo: "Subtítulo de apoio\nBenefício 1\nBenefício 2", valor: "", cta: "Baixar app" }
+    ];
+  }
+
   function legalNoticeSVG(app, W, H){
     if(!(app && app.settings && app.settings.legalNotice==="bets")) return "";
     var barH = 46;
@@ -580,9 +737,32 @@
     };
   }
 
+  function defaultWorkspace(){
+    return {
+      monitorInterval: 30,
+      aiProviders: {
+        openrouter: { apiKey: "", model: "anthropic/claude-haiku-4.5" },
+        gemini: { apiKey: "", model: "" },
+        cerebras: { apiKey: "", model: "" },
+        groq: { apiKey: "", model: "" },
+        anthropic: { apiKey: "", model: "" }
+      },
+      adAccounts: [],
+      mobileApps: [],
+      facebookPages: [],
+      pixels: []
+    };
+  }
+
   function defaultState(){
     return {
       activeId: "cardnix",
+      navView: "fabrica",
+      configView: "ativos",
+      workspace: defaultWorkspace(),
+      templates: defaultTemplates(),
+      copies: [],
+      campaignDrafts: [],
       apps: [
         {
           id: "cardnix", name: "Cardnix",
@@ -621,6 +801,13 @@
 
   var state = load();
   var videoBlobsStore = {}; // in-memory only (never persisted) — { [creativeId]: {blob, filename} }
+  var gifBlobsStore = {}; // in-memory only (never persisted) — { [creativeId]: {blob, filename} }
+  var reviewTabByApp = {}; // in-memory only — { [appId]: "ativo"|"rejeitado"|"utilizado" }
+  var gallerySelection = {}; // in-memory only — { [appId]: Set(creativeId) }
+  function getGallerySelection(appId){
+    if(!gallerySelection[appId]) gallerySelection[appId] = new Set();
+    return gallerySelection[appId];
+  }
   function load(){
     try{
       var raw = localStorage.getItem(STORE_KEY);
@@ -631,12 +818,16 @@
           if(!a.draft.bulk) a.draft.bulk = "";
           if(!a.photoLibrary) a.photoLibrary = (a.draft && a.draft.photos) || [];
           if(!a.externalCreatives) a.externalCreatives = [];
+          if(!a.settings) a.settings = {};
+          if(!a.settings.videoFormat) a.settings.videoFormat = "story";
+          if(a.settings.narrationVoiceLabel==null) a.settings.narrationVoiceLabel = "";
           a.creatives.forEach(function(c,i){
             if(!c.color) c.color = PALETTE[i % PALETTE.length];
             if(c.photoZoom==null) c.photoZoom = 100;
             if(c.photoOffsetX==null) c.photoOffsetX = 0;
             if(c.photoOffsetY==null) c.photoOffsetY = 0;
             if(!c.status) c.status = "testando";
+            if(!c.reviewStatus) c.reviewStatus = "ativo";
           });
         });
         if(!parsed.apps.some(function(a){ return a.id==="tarjetas-ideales"; })){
@@ -667,6 +858,12 @@
         if(!parsed.apps.some(function(a){ return a.id==="bets-brasil"; })){
           parsed.apps.push(betsBrasilApp());
         }
+        if(!parsed.workspace) parsed.workspace = defaultWorkspace();
+        if(!parsed.configView) parsed.configView = "ativos";
+        if(!parsed.navView) parsed.navView = "fabrica";
+        if(!parsed.templates) parsed.templates = defaultTemplates();
+        if(!parsed.copies) parsed.copies = [];
+        if(!parsed.campaignDrafts) parsed.campaignDrafts = [];
         return parsed;
       }
     }catch(e){}
@@ -791,7 +988,10 @@
     }[l] || l;
   }
 
-  function buildPosterSVG(app, cre){
+  var STORY_W = 1080, STORY_H = 1920, STORY_SAFE_MARGIN = 240;
+  var FEED_SQUARE_H = 1080;
+
+  function dispatchPosterLayout(app, cre){
     var layout = cre.layout || "stack";
     if(layout==="split") return buildPosterSplit(app, cre);
     if(layout==="stamp") return buildPosterStamp(app, cre);
@@ -809,6 +1009,125 @@
     return buildPosterStack(app, cre);
   }
 
+  function stripOuterSvgTag(svgString){
+    return svgString.replace(/^<svg[^>]*>/, "").replace(/<\/svg>\s*$/, "");
+  }
+
+  function buildPosterSVG(app, cre){
+    var inner = dispatchPosterLayout(app, cre);
+    return wrapInStorySafeArea(inner, cre);
+  }
+
+  function wrapInStorySafeArea(innerSvg, cre){
+    var content = stripOuterSvgTag(innerSvg);
+    var bg = cre.color || PALETTE[0];
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="'+STORY_W+'" height="'+STORY_H+'" viewBox="0 0 '+STORY_W+' '+STORY_H+'">' +
+      '<rect width="'+STORY_W+'" height="'+STORY_H+'" fill="'+bg+'"/>' +
+      '<g transform="translate(0,'+STORY_SAFE_MARGIN+')">'+content+'</g>' +
+    '</svg>';
+  }
+
+  // Feed/Square (1:1) export — NOT a crop of the Story composition. Meta's own automatic
+  // crop for Square/Feed placements is a black box (it can and does cut headline/CTA/logo,
+  // as seen in Ads Manager's own crop preview), so instead this builds a dedicated, self
+  // -contained 1080x1080 layout with everything guaranteed to fit — nothing to lose.
+  function buildFeedSquareSVG(app, cre){
+    var accent = cre.color || PALETTE[0];
+    var accentDark = darken(accent, 0.4), accentLight = lighten(accent, 0.16);
+    var hueB = rotateHue(accent, 42), hueC = rotateHue(accent, -42);
+    var textDark = "#141a3d", textMuted = "#5b6480";
+    var W = FEED_SQUARE_H, H = FEED_SQUARE_H, heroH = 470;
+    var u = "fs" + Math.random().toString(36).slice(2,8);
+    var corpoLinesPeek = String(cre.corpo||"").split("\n").map(function(s){ return s.trim(); }).filter(Boolean);
+
+    var svg = [];
+    svg.push('<svg xmlns="http://www.w3.org/2000/svg" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'">');
+    svg.push('<defs>');
+    svg.push('<clipPath id="heroClip'+u+'"><rect width="'+W+'" height="'+heroH+'"/></clipPath>');
+    svg.push('<linearGradient id="heroGrad'+u+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="'+accentLight+'"/><stop offset="1" stop-color="'+accentDark+'"/></linearGradient>');
+    var cardStops = cardMetalStops(accent);
+    svg.push('<linearGradient id="cardGrad'+u+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="'+cardStops[0]+'"/><stop offset="55%" stop-color="'+cardStops[1]+'"/><stop offset="1" stop-color="'+cardStops[2]+'"/></linearGradient>');
+    svg.push('<linearGradient id="chipGrad'+u+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f7e7b4"/><stop offset="1" stop-color="#b8934a"/></linearGradient>');
+    svg.push('<linearGradient id="tagGrad'+u+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+lighten(accent,0.1)+'"/><stop offset="1" stop-color="'+darken(accent,0.1)+'"/></linearGradient>');
+    svg.push('<linearGradient id="ctaGrad'+u+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+lighten(accent,0.12)+'"/><stop offset="1" stop-color="'+darken(accent,0.08)+'"/></linearGradient>');
+    svg.push('<filter id="softShadow'+u+'" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="12" stdDeviation="14" flood-color="#000000" flood-opacity="0.4"/></filter>');
+    svg.push('<filter id="tightShadow'+u+'" x="-60%" y="-60%" width="220%" height="220%"><feDropShadow dx="0" dy="4" stdDeviation="7" flood-color="#000000" flood-opacity="0.3"/></filter>');
+    svg.push('</defs>');
+
+    svg.push('<rect width="'+W+'" height="'+H+'" fill="#fbfbfa"/>');
+
+    svg.push('<g clip-path="url(#heroClip'+u+')">');
+    if(cre.photo){
+      var zoom = Math.max(1, (cre.photoZoom||100)/100);
+      var baseW = W*zoom, baseH = heroH*zoom;
+      var maxOffX=(baseW-W)/2, maxOffY=(baseH-heroH)/2;
+      var offX=((cre.photoOffsetX||0)/50)*maxOffX, offY=((cre.photoOffsetY||0)/50)*maxOffY;
+      svg.push('<image href="'+cre.photo+'" x="'+((W-baseW)/2+offX)+'" y="'+((heroH-baseH)/2+offY)+'" width="'+baseW+'" height="'+baseH+'" preserveAspectRatio="xMidYMid slice"/>');
+    } else {
+      svg.push('<rect width="'+W+'" height="'+heroH+'" fill="url(#heroGrad'+u+')"/>');
+      svg.push('<circle cx="110" cy="40" r="200" fill="'+hueB+'" opacity="0.5"/>');
+      svg.push('<circle cx="960" cy="420" r="230" fill="'+hueC+'" opacity="0.45"/>');
+    }
+    svg.push('<rect x="0" y="'+(heroH-110)+'" width="'+W+'" height="110" fill="#000000" opacity="0.14"/>');
+    svg.push('</g>');
+
+    svg.push(storeBadgeSVG(app, 32, 30, u, accent));
+
+    var valorData = splitLabelEmphasis(cre.valor);
+    svg.push('<g filter="url(#softShadow'+u+')">');
+    svg.push('<rect x="'+(W-330)+'" y="30" width="298" height="94" rx="18" fill="url(#tagGrad'+u+')"/>');
+    svg.push('</g>');
+    svg.push('<text x="'+(W-306)+'" y="58" font-family="Arial, sans-serif" font-size="12" letter-spacing="1.1" font-weight="700" fill="rgba(255,255,255,0.8)">'+xmlEscape((valorData.label||t(app,"valorLabelFallback")).toUpperCase())+'</text>');
+    var tagValSize = fitFontSize(valorData.emphasis||"", 258, [42,37,32,27]);
+    svg.push('<text x="'+(W-306)+'" y="'+(68+tagValSize*0.8)+'" font-family="Arial Black, Arial, sans-serif" font-size="'+tagValSize+'" font-weight="800" fill="#ffffff">'+xmlEscape(valorData.emphasis||"")+'</text>');
+
+    if(!cre.photo){
+      svg.push(photoOrCardSVG(app, cre, W/2-215, heroH/2-105, 430, 210, -3, u));
+    }
+
+    svg.push('<rect x="0" y="'+(heroH-20)+'" width="'+W+'" height="'+(H-heroH+20)+'" rx="30" fill="#fbfbfa"/>');
+
+    var padX = 60, contentW = W - padX*2;
+    var cursorY = heroH + 62;
+    var hookData = splitLabelEmphasis(cre.hook);
+    if(hookData.label){
+      var labelLines = wrapByWidth(hookData.label.toUpperCase(), 40, contentW, 1);
+      labelLines.forEach(function(line,i){
+        svg.push('<text x="'+padX+'" y="'+(cursorY+i*38)+'" font-family="Arial Black, Arial, sans-serif" font-size="34" font-weight="800" letter-spacing="-0.5" fill="'+textDark+'">'+xmlEscape(line)+'</text>');
+      });
+      cursorY += labelLines.length*38+2;
+      var emphSize = fitFontSize(hookData.emphasis.toUpperCase(), contentW, [64,56,48,42]);
+      svg.push('<text x="'+padX+'" y="'+(cursorY+emphSize*0.78)+'" font-family="Arial Black, Arial, sans-serif" font-size="'+emphSize+'" font-weight="800" letter-spacing="-1" fill="'+accent+'">'+xmlEscape(hookData.emphasis.toUpperCase())+'</text>');
+      cursorY += emphSize + 14;
+    } else {
+      var mainLines = wrapByWidth(hookData.emphasis.toUpperCase(), 48, contentW, 1);
+      mainLines.forEach(function(line,i){
+        svg.push('<text x="'+padX+'" y="'+(cursorY+i*50)+'" font-family="Arial Black, Arial, sans-serif" font-size="46" font-weight="800" letter-spacing="-0.6" fill="'+textDark+'">'+xmlEscape(line)+'</text>');
+      });
+      cursorY += mainLines.length*50 + 14;
+    }
+
+    var subtitle = corpoLinesPeek[0] || "";
+    if(subtitle){
+      var subSize = fitFontSize(subtitle, contentW, [20,18,16]);
+      svg.push('<text x="'+padX+'" y="'+(cursorY+subSize*0.8)+'" font-family="Arial, sans-serif" font-size="'+subSize+'" font-weight="600" fill="'+textMuted+'">'+xmlEscape(subtitle)+'</text>');
+      cursorY += subSize + 20;
+    }
+
+    var trustTotal = contentW, trustStartX = padX;
+    svg.push(trustIconsRowSVG(corpoLinesPeek.slice(1,4), trustStartX, cursorY, trustTotal, accent, textMuted, app));
+    cursorY += 82;
+
+    var ctaW = contentW, ctaX = padX, ctaH = 74;
+    svg.push(ctaButtonSVG(cre.cta, ctaX, cursorY, ctaW, ctaH, accent, u, app));
+    cursorY += ctaH;
+
+    svg.push(legalNoticeSVG(app, W, H));
+
+    svg.push('</svg>');
+    return svg.join("");
+  }
+
   // ---- layout: full-width headline header + split proof/CTA below ----
   function buildPosterSplit(app, cre){
     var accent = cre.color || PALETTE[0];
@@ -817,7 +1136,7 @@
     var hueB = rotateHue(accent, 42);
     var hueC = rotateHue(accent, -42);
     var textDark = "#141a3d", textMuted = "#5b6480";
-    var W=1080, H=1350;
+    var W=1080, H=1440;
     var u = Math.random().toString(36).slice(2,8);
     var marginX = 64, textMaxW = W - marginX*2;
 
@@ -992,7 +1311,7 @@
     var accentDark = darken(accent, 0.4), accentLight = lighten(accent, 0.16);
     var hueB = rotateHue(accent, 42), hueC = rotateHue(accent, -42);
     var textDark = "#141a3d", textMuted = "#5b6480";
-    var W=1080, H=1350, heroH=760;
+    var W=1080, H=1440, heroH=760;
     var u = Math.random().toString(36).slice(2,8);
     var corpoLinesPeek = String(cre.corpo||"").split("\n").map(function(s){ return s.trim(); }).filter(Boolean);
 
@@ -1135,7 +1454,7 @@
     var accent = cre.color || PALETTE[0];
     var accentDark = darken(accent, 0.4), accentLight = lighten(accent, 0.16);
     var textDark = "#141a3d", textMuted = "#5b6480";
-    var W=1080, H=1350;
+    var W=1080, H=1440;
     var u = Math.random().toString(36).slice(2,8);
     var corpoLinesPeek = String(cre.corpo||"").split("\n").map(function(s){ return s.trim(); }).filter(Boolean);
 
@@ -1264,7 +1583,7 @@
   function buildPosterRibbon(app, cre){
     var accent = cre.color || PALETTE[0];
     var textDark = "#141a3d", textMuted = "#5b6480";
-    var W=1080, H=1350;
+    var W=1080, H=1440;
     var u = Math.random().toString(36).slice(2,8);
     var marginX = 64, textMaxW = 640;
     var corpoLinesPeek = String(cre.corpo||"").split("\n").map(function(s){ return s.trim(); }).filter(Boolean);
@@ -1350,7 +1669,7 @@
     var accent = cre.color || PALETTE[0];
     var accentDark = darken(accent, 0.35);
     var textDark = "#141a3d", textMuted = "#5b6480";
-    var W=1080, H=1350;
+    var W=1080, H=1440;
     var u = Math.random().toString(36).slice(2,8);
     var leftW = 420, contentX = 490, contentMax = W-contentX-60;
     var corpoLinesPeek = String(cre.corpo||"").split("\n").map(function(s){ return s.trim(); }).filter(Boolean);
@@ -1435,7 +1754,7 @@
   function buildPosterFramed(app, cre){
     var accent = cre.color || PALETTE[0];
     var textDark = "#141a3d", textMuted = "#5b6480";
-    var W=1080, H=1350;
+    var W=1080, H=1440;
     var u = Math.random().toString(36).slice(2,8);
     var marginX = 64, textMaxW = W-marginX*2;
     var corpoLinesPeek = String(cre.corpo||"").split("\n").map(function(s){ return s.trim(); }).filter(Boolean);
@@ -1507,7 +1826,7 @@
     var accentDark = darken(accent, 0.4), accentLight = lighten(accent, 0.16);
     var hueB = rotateHue(accent, 42), hueC = rotateHue(accent, -42);
     var textDark = "#141a3d", textMuted = "#5b6480";
-    var W=1080, H=1350;
+    var W=1080, H=1440;
     var u = Math.random().toString(36).slice(2,8);
     var marginX = 64, textMaxW = W-marginX*2;
     var corpoLinesPeek = String(cre.corpo||"").split("\n").map(function(s){ return s.trim(); }).filter(Boolean);
@@ -1599,7 +1918,7 @@
   function buildPosterBadgeHero(app, cre){
     var accent = cre.color || PALETTE[0];
     var textDark = "#141a3d", textMuted = "#5b6480";
-    var W=1080, H=1350;
+    var W=1080, H=1440;
     var u = Math.random().toString(36).slice(2,8);
     var cx0 = W/2;
     var corpoLinesPeek = String(cre.corpo||"").split("\n").map(function(s){ return s.trim(); }).filter(Boolean);
@@ -1661,7 +1980,7 @@
     var accent = cre.color || PALETTE[0];
     var glowA = lighten(accent, 0.18), glowB = rotateHue(accent, -34);
     var gold = "#f4c542", goldSoft = "#fde7a8";
-    var W=1080, H=1350;
+    var W=1080, H=1440;
     var u = Math.random().toString(36).slice(2,8);
     var marginX = 64, textMaxW = 560;
     var corpoLinesPeek = String(cre.corpo||"").split("\n").map(function(s){ return s.trim(); }).filter(Boolean);
@@ -1794,7 +2113,7 @@
   function buildPosterBeneficios(app, cre){
     var accent = cre.color || PALETTE[0];
     var textDark = "#141a3d", textMuted = "#5b6480";
-    var W=1080, H=1350;
+    var W=1080, H=1440;
     var u = Math.random().toString(36).slice(2,8);
     var marginX = 64, textMaxW = W-marginX*2;
     var corpoLinesPeek = String(cre.corpo||"").split("\n").map(function(s){ return s.trim(); }).filter(Boolean);
@@ -1889,7 +2208,7 @@
   function buildPosterDuo(app, cre){
     var accent = cre.color || PALETTE[0];
     var textDark = "#141a3d", textMuted = "#5b6480";
-    var W=1080, H=1350;
+    var W=1080, H=1440;
     var u = Math.random().toString(36).slice(2,8);
     var corpoLinesPeek = String(cre.corpo||"").split("\n").map(function(s){ return s.trim(); }).filter(Boolean);
     var panelA = darken(accent, 0.1), panelB = lighten(accent, 0.18);
@@ -1966,7 +2285,7 @@
   function buildPosterMoneyHero(app, cre){
     var accent = cre.color || PALETTE[0];
     var textMuted = "#cfd6e6";
-    var W=1080, H=1350;
+    var W=1080, H=1440;
     var u = Math.random().toString(36).slice(2,8);
     var corpoLinesPeek = String(cre.corpo||"").split("\n").map(function(s){ return s.trim(); }).filter(Boolean);
 
@@ -2025,7 +2344,7 @@
   function buildPosterMoneySplit(app, cre){
     var accent = cre.color || PALETTE[0];
     var textDark = "#141a3d", textMuted = "#5b6480";
-    var W=1080, H=1350;
+    var W=1080, H=1440;
     var u = Math.random().toString(36).slice(2,8);
     var corpoLinesPeek = String(cre.corpo||"").split("\n").map(function(s){ return s.trim(); }).filter(Boolean);
 
@@ -2102,7 +2421,7 @@
   function buildPosterMoneyDark(app, cre){
     var accent = cre.color || PALETTE[0];
     var textMuted = "#aab2c9";
-    var W=1080, H=1350;
+    var W=1080, H=1440;
     var u = Math.random().toString(36).slice(2,8);
     var corpoLinesPeek = String(cre.corpo||"").split("\n").map(function(s){ return s.trim(); }).filter(Boolean);
 
@@ -2172,14 +2491,15 @@
     return svg.join("");
   }
 
-  function renderPosterToCanvas(svgString){
+  function renderPosterToCanvas(svgString, W, H){
+    W = W || STORY_W; H = H || STORY_H;
     return new Promise(function(resolve, reject){
       var img = new Image();
       img.onload = function(){
         var canvas = document.createElement("canvas");
-        canvas.width = 1080; canvas.height = 1350;
+        canvas.width = W; canvas.height = H;
         var ctx = canvas.getContext("2d");
-        ctx.drawImage(img,0,0,1080,1350);
+        ctx.drawImage(img,0,0,W,H);
         resolve(canvas);
       };
       img.onerror = reject;
@@ -2196,8 +2516,8 @@
     });
   }
 
-  function downloadPng(svgString, filename){
-    renderPosterToCanvas(svgString).then(function(canvas){
+  function downloadPng(svgString, filename, W, H){
+    renderPosterToCanvas(svgString, W, H).then(function(canvas){
       showDownloadModal(canvas.toDataURL("image/png"), filename);
     }).catch(function(){ alert("Não foi possível gerar a imagem. Tente novamente."); });
   }
@@ -2272,7 +2592,9 @@
     ctx.restore();
   }
 
-  var MOTION_TYPES = ["zoom-in","zoom-out","pan-left","pan-right"];
+  var MOTION_TYPES = ["zoom-in","zoom-out","pan-left","pan-right","pan-up","pan-down",
+    "zoom-in-pan-left","zoom-in-pan-right","zoom-out-pan-left","zoom-out-pan-right",
+    "diagonal-tl-br","diagonal-br-tl"];
   function computeMotionCrop(motion, t, W, H){
     var scale, sx, sy, sw, sh;
     if(motion==="zoom-out"){
@@ -2285,12 +2607,44 @@
       var maxOffX = W-sw;
       sx = motion==="pan-left" ? maxOffX*(1-t) : maxOffX*t;
       sy = (H-sh)/2;
+    } else if(motion==="pan-up" || motion==="pan-down"){
+      scale = 1.06;
+      sw = W/scale; sh = H/scale;
+      var maxOffY = H-sh;
+      sy = motion==="pan-up" ? maxOffY*(1-t) : maxOffY*t;
+      sx = (W-sw)/2;
+    } else if(motion==="zoom-in-pan-left" || motion==="zoom-in-pan-right"){
+      scale = 1 + 0.10*t;
+      sw = W/scale; sh = H/scale;
+      var maxOffX2 = W-sw;
+      sx = motion==="zoom-in-pan-left" ? maxOffX2*(1-t) : maxOffX2*t;
+      sy = (H-sh)/2;
+    } else if(motion==="zoom-out-pan-left" || motion==="zoom-out-pan-right"){
+      scale = 1.10 - 0.10*t;
+      sw = W/scale; sh = H/scale;
+      var maxOffX3 = W-sw;
+      sx = motion==="zoom-out-pan-left" ? maxOffX3*t : maxOffX3*(1-t);
+      sy = (H-sh)/2;
+    } else if(motion==="diagonal-tl-br" || motion==="diagonal-br-tl"){
+      scale = 1.10 - 0.06*t;
+      sw = W/scale; sh = H/scale;
+      var maxOffX4 = W-sw, maxOffY4 = H-sh;
+      var tt = motion==="diagonal-tl-br" ? t : (1-t);
+      sx = maxOffX4*tt; sy = maxOffY4*tt;
     } else { // zoom-in (default)
       scale = 1 + 0.08*t;
       sw = W/scale; sh = H/scale;
       sx = (W-sw)/2; sy = (H-sh)/2;
     }
     return { sx:sx, sy:sy, sw:sw, sh:sh };
+  }
+
+  function videoCanvasDims(app){
+    return (app.settings && app.settings.videoFormat==="square") ? [FEED_SQUARE_H, FEED_SQUARE_H] : [STORY_W, STORY_H];
+  }
+
+  function buildVideoBaseSVG(app, cre){
+    return (app.settings && app.settings.videoFormat==="square") ? buildFeedSquareSVG(app, cre) : buildPosterSVG(app, cre);
   }
 
   function loadImageToCanvas(url, W, H){
@@ -2310,15 +2664,250 @@
     });
   }
 
-  function renderPosterVideoBlob(app, cre, audioFile, onProgress, captionText, externalImageUrl){
+  function buildMedianCutPalette(samples, maxColors){
+    if(!samples.length) return [[0,0,0]];
+    var boxes = [samples];
+    while(boxes.length < maxColors){
+      var boxIdx = -1, boxScore = -1;
+      for(var i=0;i<boxes.length;i++){
+        if(boxes[i].length>1 && boxes[i].length>boxScore){ boxScore = boxes[i].length; boxIdx = i; }
+      }
+      if(boxIdx===-1) break;
+      var box = boxes[boxIdx];
+      var minR=255,maxR=0,minG=255,maxG=0,minB=255,maxB=0;
+      for(var j=0;j<box.length;j++){
+        var c = box[j];
+        if(c[0]<minR)minR=c[0]; if(c[0]>maxR)maxR=c[0];
+        if(c[1]<minG)minG=c[1]; if(c[1]>maxG)maxG=c[1];
+        if(c[2]<minB)minB=c[2]; if(c[2]>maxB)maxB=c[2];
+      }
+      var axis = 0;
+      var rangeG=maxG-minG, rangeB=maxB-minB, rangeR=maxR-minR;
+      if(rangeG>=rangeR && rangeG>=rangeB) axis=1;
+      else if(rangeB>=rangeR && rangeB>=rangeG) axis=2;
+      box.sort(function(a,b){ return a[axis]-b[axis]; });
+      var mid = Math.floor(box.length/2);
+      boxes.splice(boxIdx, 1, box.slice(0,mid), box.slice(mid));
+    }
+    return boxes.map(function(box){
+      var sr=0,sg=0,sb=0;
+      for(var i=0;i<box.length;i++){ sr+=box[i][0]; sg+=box[i][1]; sb+=box[i][2]; }
+      var n = box.length || 1;
+      return [Math.round(sr/n), Math.round(sg/n), Math.round(sb/n)];
+    });
+  }
+
+  function buildNearestColorLUT(palette){
+    var lut = new Uint8Array(32768);
+    for(var r=0;r<32;r++){
+      for(var g=0;g<32;g++){
+        for(var b=0;b<32;b++){
+          var rr=r*8+4, gg=g*8+4, bb=b*8+4;
+          var best=0, bestD=Infinity;
+          for(var i=0;i<palette.length;i++){
+            var pr=palette[i][0], pg=palette[i][1], pb=palette[i][2];
+            var d=(pr-rr)*(pr-rr)+(pg-gg)*(pg-gg)+(pb-bb)*(pb-bb);
+            if(d<bestD){ bestD=d; best=i; }
+          }
+          lut[(r<<10)|(g<<5)|b] = best;
+        }
+      }
+    }
+    return lut;
+  }
+
+  function lzwEncodeGifData(data, minCodeSize){
+    var clearCode = 1 << minCodeSize;
+    var eoiCode = clearCode + 1;
+    var out = [];
+    var curBlock = [];
+    function emitByte(b){
+      curBlock.push(b & 0xFF);
+      if(curBlock.length===255){
+        out.push(255);
+        for(var i=0;i<255;i++) out.push(curBlock[i]);
+        curBlock = [];
+      }
+    }
+    function flushBlock(){
+      if(curBlock.length){
+        out.push(curBlock.length);
+        for(var i=0;i<curBlock.length;i++) out.push(curBlock[i]);
+        curBlock = [];
+      }
+    }
+    var bitBuf = 0, bitCount = 0;
+    function writeCode(code, size){
+      bitBuf |= (code << bitCount);
+      bitCount += size;
+      while(bitCount>=8){
+        emitByte(bitBuf & 0xFF);
+        bitBuf = bitBuf >>> 8;
+        bitCount -= 8;
+      }
+    }
+    var codeSize, nextCode, dict, bumpArmed, bumpQueued;
+    function resetDict(){
+      dict = new Map();
+      nextCode = eoiCode + 1;
+      codeSize = minCodeSize + 1;
+      bumpArmed = false;
+      bumpQueued = false;
+    }
+    resetDict();
+    function emit(code){
+      if(bumpQueued){ codeSize++; bumpQueued = false; }
+      writeCode(code, codeSize);
+      bumpQueued = bumpArmed;
+      bumpArmed = false;
+    }
+    emit(clearCode);
+    var w = -1;
+    for(var idx=0; idx<data.length; idx++){
+      var k = data[idx];
+      if(w===-1){ w = k; continue; }
+      var key = w*256 + k;
+      var existing = dict.get(key);
+      if(existing!==undefined){
+        w = existing;
+      } else {
+        emit(w);
+        if(nextCode < 4096){
+          dict.set(key, nextCode);
+          nextCode++;
+          if(!bumpArmed && !bumpQueued && nextCode > (1<<codeSize)-1 && codeSize<12) bumpArmed = true;
+        } else {
+          emit(clearCode);
+          resetDict();
+        }
+        w = k;
+      }
+    }
+    if(w!==-1) emit(w);
+    emit(eoiCode);
+    if(bitCount>0){ emitByte(bitBuf & 0xFF); bitBuf=0; bitCount=0; }
+    flushBlock();
+    out.push(0);
+    return out;
+  }
+
+  function encodeAnimatedGIF(palette, indexedFrames, W, H, delayCs, onLzwProgress){
+    var pal = palette.slice();
+    while(pal.length < 256) pal.push([0,0,0]);
+    var bytes = [];
+    function pushStr(s){ for(var i=0;i<s.length;i++) bytes.push(s.charCodeAt(i)); }
+    function pushByte(b){ bytes.push(b & 0xFF); }
+    function pushShort(v){ bytes.push(v & 0xFF, (v>>8) & 0xFF); }
+    pushStr("GIF89a");
+    pushShort(W); pushShort(H);
+    pushByte(0xF7);
+    pushByte(0);
+    pushByte(0);
+    for(var i=0;i<256;i++){ pushByte(pal[i][0]); pushByte(pal[i][1]); pushByte(pal[i][2]); }
+    pushByte(0x21); pushByte(0xFF); pushByte(11);
+    pushStr("NETSCAPE2.0");
+    pushByte(3); pushByte(1); pushShort(0); pushByte(0);
+    for(var f=0; f<indexedFrames.length; f++){
+      pushByte(0x21); pushByte(0xF9); pushByte(4);
+      pushByte(0x00);
+      pushShort(delayCs);
+      pushByte(0);
+      pushByte(0);
+      pushByte(0x2C);
+      pushShort(0); pushShort(0);
+      pushShort(W); pushShort(H);
+      pushByte(0x00);
+      pushByte(8);
+      var lzwBytes = lzwEncodeGifData(indexedFrames[f], 8);
+      for(var k=0;k<lzwBytes.length;k++) bytes.push(lzwBytes[k]);
+      if(onLzwProgress) onLzwProgress((f+1)/indexedFrames.length);
+    }
+    pushByte(0x3B);
+    return new Uint8Array(bytes);
+  }
+
+  function renderPosterGifBlob(app, cre, onProgress, externalImageUrl, forcedMotion){
+    return new Promise(function(resolve, reject){
+      var dims = videoCanvasDims(app);
+      var baseCanvasPromise = externalImageUrl
+        ? loadImageToCanvas(externalImageUrl, dims[0], dims[1])
+        : renderPosterToCanvas(buildVideoBaseSVG(app, cre), dims[0], dims[1]);
+      baseCanvasPromise.then(function(staticCanvas){
+        var W = staticCanvas.width, H = staticCanvas.height;
+        var GIF_W = 320, GIF_H = Math.round(GIF_W * H / W);
+        var FPS = 9, DURATION = 1.8;
+        var totalFrames = Math.round(FPS*DURATION);
+        var motion = forcedMotion || MOTION_TYPES[Math.max(0,app.creatives.indexOf(cre)) % MOTION_TYPES.length];
+
+        var frameCanvas = document.createElement("canvas");
+        frameCanvas.width = GIF_W; frameCanvas.height = GIF_H;
+        var fctx = frameCanvas.getContext("2d");
+
+        var frameDatas = [];
+        for(var i=0;i<totalFrames;i++){
+          var t = totalFrames<=1 ? 0 : i/(totalFrames-1);
+          var crop = computeMotionCrop(motion, t, W, H);
+          fctx.drawImage(staticCanvas, crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, GIF_W, GIF_H);
+          frameDatas.push(fctx.getImageData(0,0,GIF_W,GIF_H).data);
+          if(onProgress) onProgress((i+1)/totalFrames*0.35);
+        }
+
+        var sampleFrameIdxs = [0, Math.floor(totalFrames/2), totalFrames-1].filter(function(v,i,a){ return a.indexOf(v)===i; });
+        var samples = [];
+        sampleFrameIdxs.forEach(function(fi){
+          var d = frameDatas[fi];
+          for(var p=0;p<d.length;p+=12){ samples.push([d[p], d[p+1], d[p+2]]); }
+        });
+        var palette = buildMedianCutPalette(samples, 256);
+        var lut = buildNearestColorLUT(palette);
+        if(onProgress) onProgress(0.45);
+
+        var indexedFrames = frameDatas.map(function(d, fi){
+          var idx = new Uint8Array(GIF_W*GIF_H);
+          for(var p=0, px=0; p<d.length; p+=4, px++){
+            idx[px] = lut[((d[p]>>3)<<10) | ((d[p+1]>>3)<<5) | (d[p+2]>>3)];
+          }
+          if(onProgress) onProgress(0.45 + (fi+1)/totalFrames*0.2);
+          return idx;
+        });
+
+        var delayCs = Math.round(100/FPS);
+        var gifBytes = encodeAnimatedGIF(palette, indexedFrames, GIF_W, GIF_H, delayCs, function(p){
+          if(onProgress) onProgress(0.65 + p*0.35);
+        });
+
+        resolve({
+          gifBlob: new Blob([gifBytes], {type:"image/gif"}),
+          imageDataUrl: staticCanvas.toDataURL("image/png")
+        });
+      }).catch(reject);
+    });
+  }
+
+  function shuffledMotionSequence(n){
+    var seq = [];
+    var pool = [];
+    while(seq.length < n){
+      if(pool.length===0){
+        pool = MOTION_TYPES.slice();
+        for(var i=pool.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=pool[i]; pool[i]=pool[j]; pool[j]=t; }
+        if(seq.length && pool[0]===seq[seq.length-1]) pool.push(pool.shift());
+      }
+      seq.push(pool.shift());
+    }
+    return seq;
+  }
+
+  function renderPosterVideoBlob(app, cre, audioFile, onProgress, captionText, externalImageUrl, forcedMotion){
     return new Promise(function(resolve, reject){
       if(!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream){
         reject(new Error("Seu navegador não suporta gravação de vídeo (precisa de MediaRecorder + captureStream)."));
         return;
       }
+      var dims = videoCanvasDims(app);
       var baseCanvasPromise = externalImageUrl
-        ? loadImageToCanvas(externalImageUrl, 1080, 1350)
-        : renderPosterToCanvas(buildPosterSVG(app, cre));
+        ? loadImageToCanvas(externalImageUrl, dims[0], dims[1])
+        : renderPosterToCanvas(buildVideoBaseSVG(app, cre), dims[0], dims[1]);
       baseCanvasPromise.then(function(staticCanvas){
         var W = staticCanvas.width, H = staticCanvas.height;
         var outCanvas = document.createElement("canvas");
@@ -2339,8 +2928,8 @@
         });
 
         audioEl.addEventListener("loadedmetadata", function(){
-          var duration = Math.min(audioEl.duration || 15, 15);
-          if(!isFinite(duration) || duration<=0) duration = 15;
+          var duration = Math.min(audioEl.duration || 60, 60);
+          if(!isFinite(duration) || duration<=0) duration = 60;
 
           var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
           var source = audioCtx.createMediaElementSource(audioEl);
@@ -2368,7 +2957,7 @@
           };
           recorder.onerror = function(e){ cleanup(); reject((e && e.error) || new Error("Erro na gravação")); };
 
-          var motion = MOTION_TYPES[Math.max(0,app.creatives.indexOf(cre)) % MOTION_TYPES.length];
+          var motion = forcedMotion || MOTION_TYPES[Math.max(0,app.creatives.indexOf(cre)) % MOTION_TYPES.length];
           var startTime = null;
           function frame(ts){
             if(startTime===null) startTime = ts;
@@ -2400,44 +2989,28 @@
     });
   }
 
-  function fetchGeneratedVoice(text){
-    return fetch("/api/generate-voice", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: text })
-    }).then(function(r){
-      if(!r.ok){
-        return r.json().then(function(data){ throw new Error((data && data.error) || "Falha ao gerar narração"); });
-      }
-      return r.blob();
-    });
-  }
-
   function openVideoModal(app, cre, externalImageUrl){
-    var defaultScript = (String(cre.hook||"").replace(/\n/g," ") + ". " + String(cre.corpo||"").split("\n")[0]).trim();
+    var motionIdx;
+    if(externalImageUrl){
+      var extObj = (app.externalCreatives||[]).filter(function(e){ return e.id===cre.id; })[0];
+      motionIdx = extObj ? app.externalCreatives.indexOf(extObj) : 0;
+    } else {
+      motionIdx = app.creatives.indexOf(cre);
+    }
+    var forcedMotion = MOTION_TYPES[Math.max(0,motionIdx) % MOTION_TYPES.length];
     var overlay = document.createElement("div");
     overlay.className = "dl-overlay";
     overlay.innerHTML =
-      '<div class="dl-box" style="max-height:88vh;overflow-y:auto">' +
-        '<p style="margin-top:0">Vídeo (até 15s) de "'+xmlEscape(String(cre.hook||"").split("\n")[0])+'"</p>' +
-        '<label>Fonte da narração</label>' +
-        '<select id="voiceModeSel">' +
-          '<option value="auto" selected>Gerar automaticamente (ElevenLabs)</option>' +
-          '<option value="upload">Áudio real (upload manual)</option>' +
-        '</select>' +
-        '<div id="autoModeBlock" style="margin-top:10px">' +
-          '<label>Texto que a narração vai falar</label>' +
-          '<textarea id="autoTextInput" rows="3">'+xmlEscape(defaultScript)+'</textarea>' +
-        '</div>' +
-        '<div id="uploadModeBlock" style="margin-top:10px;display:none">' +
-          '<label>Áudio da narração (mp3/wav/m4a)</label>' +
-          '<input type="file" id="videoAudioInput" accept="audio/*" />' +
-        '</div>' +
+      '<div class="dl-box">' +
+        '<p style="margin-top:0">Vídeo (até 60s) de "'+xmlEscape(String(cre.hook||"").split("\n")[0])+'"</p>' +
+        (app.settings.narrationVoiceLabel ? '<p class="hint">Voz combinada pro projeto: <strong>'+xmlEscape(app.settings.narrationVoiceLabel)+'</strong> — gere a narração com essa voz no ElevenLabs antes de subir aqui.</p>' : '') +
+        '<label>Áudio da narração (mp3/wav/m4a — gerado no ElevenLabs ou outro)</label>' +
+        '<input type="file" id="videoAudioInput" accept="audio/*" />' +
         '<label style="margin-top:14px">Legenda (opcional) — mesmo texto da narração, aparece estilo TikTok</label>' +
-        '<textarea id="videoCaptionInput" rows="3" placeholder="Cole aqui o texto que a narração fala...">'+xmlEscape(defaultScript)+'</textarea>' +
+        '<textarea id="videoCaptionInput" rows="3" placeholder="Cole aqui o texto que a narração fala..."></textarea>' +
         '<div class="hint" id="videoHint" style="margin-top:8px"></div>' +
         '<div class="dl-actions" style="margin-top:14px">' +
-          '<button type="button" class="btn-primary" id="genVideoBtn">Gerar vídeo</button>' +
+          '<button type="button" class="btn-primary" id="genVideoBtn" disabled>⬆️ Escolha um áudio primeiro</button>' +
           '<button type="button" class="dl-close">Fechar</button>' +
         '</div>' +
       '</div>';
@@ -2448,54 +3021,24 @@
     overlay.querySelector(".dl-close").addEventListener("click", close);
     document.addEventListener("keydown", onKey);
 
-    var voiceModeSel = overlay.querySelector("#voiceModeSel");
-    var autoBlock = overlay.querySelector("#autoModeBlock");
-    var uploadBlock = overlay.querySelector("#uploadModeBlock");
-    var autoTextInput = overlay.querySelector("#autoTextInput");
     var audioInput = overlay.querySelector("#videoAudioInput");
     var genBtn = overlay.querySelector("#genVideoBtn");
     var hint = overlay.querySelector("#videoHint");
     var chosenFile = null;
-
-    function updateGenBtn(){
-      if(voiceModeSel.value==="upload"){
-        genBtn.disabled = !chosenFile;
-        genBtn.textContent = chosenFile ? "Gerar vídeo" : "⬆️ Escolha um áudio primeiro";
-      } else {
-        genBtn.disabled = !autoTextInput.value.trim();
-        genBtn.textContent = "Gerar vídeo";
-      }
-    }
-    voiceModeSel.addEventListener("change", function(){
-      autoBlock.style.display = voiceModeSel.value==="auto" ? "" : "none";
-      uploadBlock.style.display = voiceModeSel.value==="upload" ? "" : "none";
-      updateGenBtn();
-    });
     audioInput.addEventListener("change", function(e){
       chosenFile = e.target.files && e.target.files[0];
+      genBtn.disabled = !chosenFile;
+      genBtn.textContent = chosenFile ? "Gerar vídeo" : "⬆️ Escolha um áudio primeiro";
       hint.textContent = chosenFile ? ("Arquivo: "+chosenFile.name) : "";
-      updateGenBtn();
     });
-    autoTextInput.addEventListener("input", updateGenBtn);
-    updateGenBtn();
-
     genBtn.addEventListener("click", function(){
-      var isAuto = voiceModeSel.value==="auto";
-      if(isAuto && !autoTextInput.value.trim()) return;
-      if(!isAuto && !chosenFile) return;
-      genBtn.disabled = true; voiceModeSel.disabled = true; audioInput.disabled = true;
+      if(!chosenFile) return;
+      genBtn.disabled = true; audioInput.disabled = true;
+      genBtn.textContent = "Gravando... 0%";
       var captionText = overlay.querySelector("#videoCaptionInput").value.trim();
-
-      var audioPromise = isAuto
-        ? (genBtn.textContent = "Gerando narração...", fetchGeneratedVoice(autoTextInput.value.trim()))
-        : Promise.resolve(chosenFile);
-
-      audioPromise.then(function(audioBlob){
-        genBtn.textContent = "Gravando... 0%";
-        return renderPosterVideoBlob(app, cre, audioBlob, function(t){
-          genBtn.textContent = "Gravando... "+Math.round(t*100)+"%";
-        }, captionText, externalImageUrl);
-      }).then(function(result){
+      renderPosterVideoBlob(app, cre, chosenFile, function(t){
+        genBtn.textContent = "Gravando... "+Math.round(t*100)+"%";
+      }, captionText, externalImageUrl, forcedMotion).then(function(result){
         close();
         var blob = result.videoBlob;
         var ext = (blob.type||"").indexOf("mp4")>-1 ? ".mp4" : ".webm";
@@ -2507,8 +3050,8 @@
       }).catch(function(err){
         console.error(err);
         hint.textContent = "Erro: "+(err.message||err);
-        genBtn.disabled = false; voiceModeSel.disabled = false; audioInput.disabled = false;
-        updateGenBtn();
+        genBtn.disabled = false; audioInput.disabled = false;
+        genBtn.textContent = "Gerar vídeo";
       });
     });
   }
@@ -2544,12 +3087,82 @@
     document.addEventListener("keydown", onKey);
   }
 
+  function openGifModal(app, cre, externalImageUrl){
+    var motionIdx;
+    if(externalImageUrl){
+      var extObj = (app.externalCreatives||[]).filter(function(e){ return e.id===cre.id; })[0];
+      motionIdx = extObj ? app.externalCreatives.indexOf(extObj) : 0;
+    } else {
+      motionIdx = app.creatives.indexOf(cre);
+    }
+    var forcedMotion = MOTION_TYPES[Math.max(0,motionIdx) % MOTION_TYPES.length];
+    var overlay = document.createElement("div");
+    overlay.className = "dl-overlay";
+    overlay.innerHTML =
+      '<div class="dl-box">' +
+        '<p style="margin-top:0">GIF animado de "'+xmlEscape(String(cre.hook||"").split("\n")[0])+'"</p>' +
+        '<p class="hint">Loop curto (~1,8s) com o mesmo movimento do vídeo, sem áudio — ótimo pra prévia rápida ou pra mandar no WhatsApp/Slack.</p>' +
+        '<div class="dl-actions" style="margin-top:14px">' +
+          '<button type="button" class="btn-primary" id="genGifBtn">Gerar GIF</button>' +
+          '<button type="button" class="dl-close">Fechar</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    function close(){ overlay.remove(); document.removeEventListener("keydown", onKey); }
+    function onKey(e){ if(e.key==="Escape") close(); }
+    overlay.addEventListener("click", function(e){ if(e.target===overlay) close(); });
+    overlay.querySelector(".dl-close").addEventListener("click", close);
+    document.addEventListener("keydown", onKey);
+
+    var genBtn = overlay.querySelector("#genGifBtn");
+    genBtn.addEventListener("click", function(){
+      genBtn.disabled = true;
+      genBtn.textContent = "Gerando... 0%";
+      renderPosterGifBlob(app, cre, function(p){
+        genBtn.textContent = "Gerando... "+Math.round(p*100)+"%";
+      }, externalImageUrl, forcedMotion).then(function(result){
+        close();
+        var baseName = sanitizeFilename(String(cre.hook||"gif"));
+        var filename = baseName+".gif";
+        showGifResultModal(result.gifBlob, filename);
+      }).catch(function(err){
+        console.error(err);
+        genBtn.disabled = false;
+        genBtn.textContent = "Gerar GIF";
+        alert("Erro ao gerar o GIF: "+(err.message||err));
+      });
+    });
+  }
+
+  function showGifResultModal(blob, filename){
+    var url = URL.createObjectURL(blob);
+    var overlay = document.createElement("div");
+    overlay.className = "dl-overlay";
+    overlay.innerHTML =
+      '<div class="dl-box" style="max-width:480px;max-height:85vh;overflow-y:auto">' +
+        '<p style="margin-top:0">GIF pronto! ('+xmlEscape(filename)+')</p>' +
+        '<img src="'+url+'" alt="GIF animado" style="width:100%;border-radius:10px;display:block" />' +
+        '<div class="dl-actions" style="margin-top:14px">' +
+          '<a href="'+url+'" download="'+filename+'" target="_blank" rel="noopener" class="btn-primary">Baixar GIF</a>' +
+          '<button type="button" class="dl-close">Fechar</button>' +
+        '</div>' +
+        '<p class="hint" style="margin-top:14px"><strong>Clique normal pode não baixar.</strong> Clique com o botão direito na imagem (ou no link acima) e escolha "Salvar imagem como..." / "Abrir link em nova janela".</p>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    function close(){ overlay.remove(); document.removeEventListener("keydown", onKey); URL.revokeObjectURL(url); }
+    function onKey(e){ if(e.key==="Escape") close(); }
+    overlay.addEventListener("click", function(e){ if(e.target===overlay) close(); });
+    overlay.querySelector(".dl-close").addEventListener("click", close);
+    document.addEventListener("keydown", onKey);
+  }
+
   function openBatchVideoModal(app){
     var overlay = document.createElement("div");
     overlay.className = "dl-overlay";
     overlay.innerHTML =
       '<div class="dl-box" style="max-width:560px;max-height:85vh;overflow-y:auto">' +
-        '<p style="margin-top:0">Gerar vídeos do lote (até 15s cada)</p>' +
+        '<p style="margin-top:0">Gerar vídeos do lote (até 60s cada)</p>' +
+        (app.settings.narrationVoiceLabel ? '<p class="hint">Voz combinada pro projeto: <strong>'+xmlEscape(app.settings.narrationVoiceLabel)+'</strong> — gere todos os áudios com essa voz no ElevenLabs antes de subir aqui.</p>' : '') +
         '<label>Selecione os áudios de narração — a ordem dos arquivos é pareada com a ordem dos criativos abaixo</label>' +
         '<input type="file" id="batchAudioInput" accept="audio/*" multiple />' +
         '<div id="pairList" style="margin-top:12px"></div>' +
@@ -2586,6 +3199,7 @@
       genBtn.disabled = true; audioInput.disabled = true;
       var n = app.creatives.length;
       var captionText = overlay.querySelector("#batchCaptionInput").value.trim();
+      var motionSeq = shuffledMotionSequence(n);
       var chain = Promise.resolve();
       var done = 0;
       for(var i=0;i<n;i++){
@@ -2596,7 +3210,7 @@
             var audioFile = files[i % files.length];
             return renderPosterVideoBlob(app, cre, audioFile, function(t){
               genBtn.textContent = "Gerando "+(i+1)+"/"+n+"... "+Math.round(t*100)+"%";
-            }, captionText).then(function(result){
+            }, captionText, undefined, motionSeq[i]).then(function(result){
               var blob = result.videoBlob;
               var ext = (blob.type||"").indexOf("mp4")>-1 ? ".mp4" : ".webm";
               videoBlobsStore[cre.id] = { blob: blob, filename: creativeFilename(app, cre, i+1).replace(/\.png$/,ext), imageDataUrl: result.imageDataUrl };
@@ -2680,12 +3294,102 @@
     });
   }
 
+  function openBatchGifModal(app){
+    var n = app.creatives.length;
+    var overlay = document.createElement("div");
+    overlay.className = "dl-overlay";
+    overlay.innerHTML =
+      '<div class="dl-box" style="max-width:520px">' +
+        '<p style="margin-top:0">Gerar GIFs do lote ('+n+' criativo'+(n===1?"":"s")+')</p>' +
+        '<p class="hint">Cada GIF sai com um movimento diferente (loop curto, ~1,8s, sem áudio) — mesma lógica dos vídeos.</p>' +
+        '<div class="dl-actions" style="margin-top:14px">' +
+          '<button type="button" class="btn-primary" id="genBatchGifBtn">Gerar GIFs</button>' +
+          '<button type="button" class="dl-close">Fechar</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    function close(){ overlay.remove(); document.removeEventListener("keydown", onKey); }
+    function onKey(e){ if(e.key==="Escape") close(); }
+    overlay.addEventListener("click", function(e){ if(e.target===overlay) close(); });
+    overlay.querySelector(".dl-close").addEventListener("click", close);
+    document.addEventListener("keydown", onKey);
+
+    var genBtn = overlay.querySelector("#genBatchGifBtn");
+    genBtn.addEventListener("click", function(){
+      genBtn.disabled = true;
+      var motionSeq = shuffledMotionSequence(n);
+      var chain = Promise.resolve();
+      var done = 0;
+      for(var i=0;i<n;i++){
+        (function(i){
+          chain = chain.then(function(){
+            genBtn.textContent = "Gerando "+(i+1)+"/"+n+"...";
+            var cre = app.creatives[i];
+            return renderPosterGifBlob(app, cre, function(p){
+              genBtn.textContent = "Gerando "+(i+1)+"/"+n+"... "+Math.round(p*100)+"%";
+            }, undefined, motionSeq[i]).then(function(result){
+              gifBlobsStore[cre.id] = { blob: result.gifBlob, filename: creativeFilename(app, cre, i+1).replace(/\.png$/,".gif") };
+              done++;
+            }).catch(function(err){ console.error("Falha no GIF "+(i+1), err); });
+          });
+        })(i);
+      }
+      chain.then(function(){
+        close();
+        showBatchGifDoneModal(app, done, n, false);
+      });
+    });
+  }
+
+  function showBatchGifDoneModal(app, done, n, isExternal){
+    var overlay = document.createElement("div");
+    overlay.className = "dl-overlay";
+    overlay.innerHTML =
+      '<div class="dl-box">' +
+        '<p style="margin-top:0">'+done+' de '+n+' GIF(s) gerado(s) com sucesso!</p>' +
+        '<div class="dl-actions">' +
+          '<button type="button" class="btn-primary" id="dlBatchGifsBtn">Baixar GIFs (.zip)</button>' +
+          '<button type="button" class="dl-close">Fechar</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    function close(){ overlay.remove(); document.removeEventListener("keydown", onKey); }
+    function onKey(e){ if(e.key==="Escape") close(); }
+    overlay.addEventListener("click", function(e){ if(e.target===overlay) close(); });
+    overlay.querySelector(".dl-close").addEventListener("click", close);
+    document.addEventListener("keydown", onKey);
+    overlay.querySelector("#dlBatchGifsBtn").addEventListener("click", function(){
+      (isExternal ? downloadGifsZipExternal(app) : downloadGifsZip(app));
+    });
+  }
+
+  function downloadGifsZip(app){
+    var entries = app.creatives.map(function(cre,i){ return { cre:cre, i:i, v: gifBlobsStore[cre.id] }; }).filter(function(e){ return !!e.v; });
+    if(!entries.length){
+      alert('Nenhum GIF gerado ainda pra "'+app.name+'". Clique em "Gerar GIFs do lote" primeiro.');
+      return Promise.resolve();
+    }
+    var files = [];
+    var chain = Promise.resolve();
+    entries.forEach(function(e){
+      chain = chain.then(function(){
+        return e.v.blob.arrayBuffer();
+      }).then(function(buf){
+        files.push({ name: e.v.filename, data: new Uint8Array(buf) });
+      });
+    });
+    return chain.then(function(){
+      var zipBlob = buildZip(files);
+      showZipModal(zipBlob, sanitizeFilename(app.name)+"_gifs.zip");
+    });
+  }
+
   function openBatchVideoModalExternal(app){
     var overlay = document.createElement("div");
     overlay.className = "dl-overlay";
     overlay.innerHTML =
       '<div class="dl-box" style="max-width:560px;max-height:85vh;overflow-y:auto">' +
-        '<p style="margin-top:0">Gerar vídeos do lote — criativos externos (até 15s cada)</p>' +
+        '<p style="margin-top:0">Gerar vídeos do lote — criativos externos (até 60s cada)</p>' +
         '<label>Selecione os áudios de narração — a ordem dos arquivos é pareada com a ordem dos criativos abaixo</label>' +
         '<input type="file" id="batchAudioInputExt" accept="audio/*" multiple />' +
         '<div id="pairListExt" style="margin-top:12px"></div>' +
@@ -2722,6 +3426,7 @@
       genBtn.disabled = true; audioInput.disabled = true;
       var n = app.externalCreatives.length;
       var captionText = overlay.querySelector("#batchCaptionInputExt").value.trim();
+      var motionSeq = shuffledMotionSequence(n);
       var chain = Promise.resolve();
       var done = 0;
       for(var i=0;i<n;i++){
@@ -2732,7 +3437,7 @@
             var audioFile = files[i % files.length];
             return renderPosterVideoBlob(app, { id: ext.id, hook: ext.name }, audioFile, function(t){
               genBtn.textContent = "Gerando "+(i+1)+"/"+n+"... "+Math.round(t*100)+"%";
-            }, captionText, ext.imageDataUrl).then(function(result){
+            }, captionText, ext.imageDataUrl, motionSeq[i]).then(function(result){
               var blob = result.videoBlob;
               var extn = (blob.type||"").indexOf("mp4")>-1 ? ".mp4" : ".webm";
               videoBlobsStore[ext.id] = { blob: blob, filename: sanitizeFilename((i+1)+"_"+ext.name)+extn, imageDataUrl: result.imageDataUrl };
@@ -2766,6 +3471,74 @@
     return chain.then(function(){
       var zipBlob = buildZip(files);
       showZipModal(zipBlob, sanitizeFilename(app.name)+"_externos_videos.zip");
+    });
+  }
+
+  function openBatchGifModalExternal(app){
+    var n = app.externalCreatives.length;
+    var overlay = document.createElement("div");
+    overlay.className = "dl-overlay";
+    overlay.innerHTML =
+      '<div class="dl-box" style="max-width:520px">' +
+        '<p style="margin-top:0">Gerar GIFs do lote — criativos externos ('+n+' criativo'+(n===1?"":"s")+')</p>' +
+        '<p class="hint">Cada GIF sai com um movimento diferente (loop curto, ~1,8s, sem áudio) — mesma lógica dos vídeos.</p>' +
+        '<div class="dl-actions" style="margin-top:14px">' +
+          '<button type="button" class="btn-primary" id="genBatchGifBtnExt">Gerar GIFs</button>' +
+          '<button type="button" class="dl-close">Fechar</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    function close(){ overlay.remove(); document.removeEventListener("keydown", onKey); }
+    function onKey(e){ if(e.key==="Escape") close(); }
+    overlay.addEventListener("click", function(e){ if(e.target===overlay) close(); });
+    overlay.querySelector(".dl-close").addEventListener("click", close);
+    document.addEventListener("keydown", onKey);
+
+    var genBtn = overlay.querySelector("#genBatchGifBtnExt");
+    genBtn.addEventListener("click", function(){
+      genBtn.disabled = true;
+      var motionSeq = shuffledMotionSequence(n);
+      var chain = Promise.resolve();
+      var done = 0;
+      for(var i=0;i<n;i++){
+        (function(i){
+          chain = chain.then(function(){
+            genBtn.textContent = "Gerando "+(i+1)+"/"+n+"...";
+            var ext = app.externalCreatives[i];
+            return renderPosterGifBlob(app, { id: ext.id, hook: ext.name }, function(p){
+              genBtn.textContent = "Gerando "+(i+1)+"/"+n+"... "+Math.round(p*100)+"%";
+            }, ext.imageDataUrl, motionSeq[i]).then(function(result){
+              gifBlobsStore[ext.id] = { blob: result.gifBlob, filename: sanitizeFilename((i+1)+"_"+ext.name)+".gif" };
+              done++;
+            }).catch(function(err){ console.error("Falha no GIF "+(i+1), err); });
+          });
+        })(i);
+      }
+      chain.then(function(){
+        close();
+        showBatchGifDoneModal(app, done, n, true);
+      });
+    });
+  }
+
+  function downloadGifsZipExternal(app){
+    var entries = app.externalCreatives.map(function(ext,i){ return { ext:ext, i:i, v: gifBlobsStore[ext.id] }; }).filter(function(e){ return !!e.v; });
+    if(!entries.length){
+      alert('Nenhum GIF gerado ainda pros criativos externos de "'+app.name+'". Clique em "Gerar GIFs do lote" primeiro.');
+      return Promise.resolve();
+    }
+    var files = [];
+    var chain = Promise.resolve();
+    entries.forEach(function(e){
+      chain = chain.then(function(){
+        return e.v.blob.arrayBuffer();
+      }).then(function(buf){
+        files.push({ name: e.v.filename, data: new Uint8Array(buf) });
+      });
+    });
+    return chain.then(function(){
+      var zipBlob = buildZip(files);
+      showZipModal(zipBlob, sanitizeFilename(app.name)+"_externos_gifs.zip");
     });
   }
 
@@ -2880,43 +3653,1011 @@
     });
   }
 
+  function downloadBatchZipSquare(app){
+    var files = [];
+    var chain = Promise.resolve();
+    app.creatives.forEach(function(cre, i){
+      chain = chain.then(function(){
+        var svgStr = buildFeedSquareSVG(app, cre);
+        return renderPosterToCanvas(svgStr, FEED_SQUARE_H, FEED_SQUARE_H);
+      }).then(function(canvas){
+        return canvasToPngBytes(canvas);
+      }).then(function(bytes){
+        var name = creativeFilename(app, cre, i+1).replace(/\.png$/, "_quadrado.png");
+        files.push({ name: name, data: bytes });
+      });
+    });
+    return chain.then(function(){
+      var zipBlob = buildZip(files);
+      showZipModal(zipBlob, sanitizeFilename(app.name)+"_criativos_quadrado.zip");
+    });
+  }
+
   // ---------------- rendering ----------------
+
+  var NAV_ITEMS = [
+    { key:"inicio", icon:"⌂", label:"Início" },
+    { key:"painel", icon:"▦", label:"Painel" },
+    { key:"novacampanha", icon:"+", label:"Nova campanha" },
+    { key:"fabrica", icon:"✨", label:"Fábrica" },
+    { key:"metricas", icon:"📊", label:"Métricas" },
+    { key:"subidas", icon:"⬆", label:"Subidas" },
+    { key:"templates", icon:"▤", label:"Templates" },
+    { key:"copies", icon:"⧉", label:"Copies" },
+    { key:"config", icon:"⚙", label:"Config" }
+  ];
 
   function render(){ renderTabs(); renderPanels(); }
 
   function renderTabs(){
-    var list = document.getElementById("tabList");
-    list.innerHTML = "";
-    state.apps.forEach(function(app){
-      var tab = document.createElement("div");
-      tab.className = "tab" + (app.id===state.activeId ? " active" : "");
-      tab.tabIndex = 0;
-      var dotColor = app.creatives[0] ? app.creatives[0].color : PALETTE[0];
-      tab.innerHTML =
-        '<span class="swatch" style="background:'+dotColor+'"></span>' +
-        '<span class="tab-name">'+xmlEscape(app.name||"Sem nome")+'</span>' +
-        '<button class="tab-del" type="button" aria-label="Remover '+xmlEscape(app.name)+'">✕</button>';
-      tab.addEventListener("click", function(ev){
-        if(ev.target.classList.contains("tab-del")){
-          ev.stopPropagation();
-          if(state.apps.length<=1) return;
-          if(confirm('Remover "'+app.name+'" e todos os criativos dessa aba?')){
-            state.apps = state.apps.filter(function(a){ return a.id!==app.id; });
-            if(state.activeId===app.id) state.activeId = state.apps[0].id;
-            save(); render();
-          }
-          return;
-        }
-        state.activeId = app.id; save(); render();
+    var activeApp = state.apps.filter(function(a){ return a.id===state.activeId; })[0] || state.apps[0];
+    document.getElementById("projectSelectName").textContent = activeApp ? activeApp.name : "—";
+
+    var dropdown = document.getElementById("projectDropdown");
+    dropdown.innerHTML = state.apps.map(function(app){
+      return '<div class="rail-project-dropdown-item'+(app.id===state.activeId?" active":"")+'" data-id="'+app.id+'">'+xmlEscape(app.name)+'</div>';
+    }).join("") +
+      '<div class="rail-project-dropdown-add">' +
+        '<input type="text" id="railNewProjectName" placeholder="Nome do novo projeto" />' +
+        '<button type="button" class="btn-primary btn-sm" id="railAddProjectBtn" style="width:100%">+ Adicionar projeto</button>' +
+      '</div>';
+    dropdown.querySelectorAll(".rail-project-dropdown-item").forEach(function(el){
+      el.addEventListener("click", function(){
+        state.activeId = el.getAttribute("data-id");
+        state.navView = "fabrica";
+        dropdown.style.display = "none";
+        save(); render();
       });
-      list.appendChild(tab);
     });
+    dropdown.querySelector("#railAddProjectBtn").addEventListener("click", function(){
+      var input = dropdown.querySelector("#railNewProjectName");
+      var name = input.value.trim();
+      if(!name) return;
+      var id = uid("app");
+      state.apps.push({ id:id, name:name, settings:{ store:"Google Play" }, draft: defaultDraft("R$ 3.000"), photoLibrary: [], externalCreatives: [], creatives: [] });
+      state.activeId = id; state.navView = "fabrica";
+      save(); render();
+    });
+
+    var railNav = document.getElementById("railNav");
+    railNav.innerHTML = NAV_ITEMS.map(function(item){
+      return '<button type="button" class="rail-nav-item'+(state.navView===item.key?" active":"")+'" data-nav="'+item.key+'">' +
+        '<span class="nav-ic">'+item.icon+'</span>'+xmlEscape(item.label)+'</button>';
+    }).join("");
+    railNav.querySelectorAll(".rail-nav-item").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        state.navView = btn.getAttribute("data-nav");
+        save(); render();
+      });
+    });
+  }
+
+  function buildPlaceholderPage(navKey){
+    var labels = { inicio:"Início", painel:"Painel", novacampanha:"Nova campanha", metricas:"Métricas", subidas:"Subidas", templates:"Templates", copies:"Copies" };
+    var wrap = document.createElement("section");
+    wrap.className = "panel active";
+    wrap.innerHTML =
+      '<h2 style="margin:0 0 4px">'+(labels[navKey]||navKey)+'</h2>' +
+      '<p class="hint">Essa página ainda não foi construída — por enquanto só a Fábrica e o Config estão prontas.</p>';
+    return wrap;
   }
 
   function renderPanels(){
     var main = document.getElementById("mainPanels");
     main.innerHTML = "";
+    if(state.navView==="config"){
+      main.appendChild(buildConfigPage());
+      return;
+    }
+    if(state.navView==="templates"){
+      main.appendChild(buildTemplatesPage());
+      return;
+    }
+    if(state.navView==="inicio"){
+      main.appendChild(buildInicioPage());
+      return;
+    }
+    if(state.navView==="subidas"){
+      main.appendChild(buildSubidasPage());
+      return;
+    }
+    if(state.navView==="copies"){
+      main.appendChild(buildCopiesPage());
+      return;
+    }
+    if(state.navView==="novacampanha"){
+      main.appendChild(buildNovaCampanhaPage());
+      return;
+    }
+    if(state.navView==="painel"){
+      main.appendChild(buildPainelPage());
+      return;
+    }
+    if(state.navView==="metricas"){
+      main.appendChild(buildMetricasPage());
+      return;
+    }
+    if(state.navView && state.navView!=="fabrica"){
+      main.appendChild(buildPlaceholderPage(state.navView));
+      return;
+    }
     state.apps.forEach(function(app){ main.appendChild(buildPanel(app)); });
+  }
+
+  function buildConfigPage(){
+    var wrap = document.createElement("section");
+    wrap.className = "panel active config-page";
+    var subtitles = {
+      ativos: "Contas, apps, páginas e pixels do workspace.",
+      projetos: "Crie e configure os projetos (cada um isola seus criativos).",
+      workspace: "Preferências do workspace: monitor de contas e chaves das APIs de IA."
+    };
+    var tab = state.configView || "ativos";
+    wrap.innerHTML =
+      '<h2 style="margin:0 0 4px">Configurações</h2>' +
+      '<p class="hint" style="margin-bottom:18px">'+subtitles[tab]+'</p>' +
+      '<div class="config-tabs">' +
+        ["ativos","projetos","workspace"].map(function(t){
+          var labels = { ativos:"Ativos", projetos:"Projetos", workspace:"Workspace" };
+          return '<button type="button" class="config-tab-btn'+(t===tab?" active":"")+'" data-tab="'+t+'">'+labels[t]+'</button>';
+        }).join("") +
+      '</div>' +
+      '<div id="configTabBody"></div>';
+    wrap.querySelectorAll(".config-tab-btn").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        state.configView = btn.getAttribute("data-tab");
+        save(); renderPanels();
+      });
+    });
+    var body = wrap.querySelector("#configTabBody");
+    if(tab==="ativos") body.appendChild(buildConfigAtivos());
+    else if(tab==="projetos") body.appendChild(buildConfigProjetos());
+    else body.appendChild(buildConfigWorkspace());
+    return wrap;
+  }
+
+  function buildConfigProjetos(){
+    var wrap = document.createElement("div");
+    wrap.className = "config-block";
+    wrap.innerHTML =
+      '<h3>Projetos</h3>' +
+      '<p class="config-desc">Cada projeto isola seus criativos, fotos e configurações. Clique num projeto pra abri-lo.</p>' +
+      '<div id="projectListEl"></div>' +
+      '<div class="config-row" style="grid-template-columns:1fr auto;margin-top:16px">' +
+        '<input type="text" id="newProjectNameCfg" placeholder="Nome do novo projeto" />' +
+        '<button type="button" class="btn-primary" id="addProjectCfgBtn">+ Adicionar projeto</button>' +
+      '</div>';
+    var listEl = wrap.querySelector("#projectListEl");
+    function renderList(){
+      listEl.innerHTML = "";
+      state.apps.forEach(function(app){
+        var item = document.createElement("div");
+        item.className = "config-list-item";
+        item.innerHTML =
+          '<div>' +
+            '<div class="name">'+xmlEscape(app.name)+(app.id===state.activeId?' <span style="color:var(--accent-strong);font-size:.72rem">· atual</span>':'')+'</div>' +
+            '<div class="sub">'+app.creatives.length+' criativos · '+app.photoLibrary.length+' fotos · '+app.externalCreatives.length+' externos</div>' +
+          '</div>' +
+          '<div style="display:flex;gap:14px">' +
+            '<button type="button" class="rm" style="color:var(--accent-strong)" data-act="edit">abrir</button>' +
+            (state.apps.length>1 ? '<button type="button" class="rm" data-act="del">excluir</button>' : '') +
+          '</div>';
+        item.querySelector('[data-act="edit"]').addEventListener("click", function(){
+          state.activeId = app.id; state.configView = null; save(); render();
+        });
+        var delBtn = item.querySelector('[data-act="del"]');
+        if(delBtn) delBtn.addEventListener("click", function(){
+          if(confirm('Remover "'+app.name+'" e todos os criativos dessa aba?')){
+            state.apps = state.apps.filter(function(a){ return a.id!==app.id; });
+            if(state.activeId===app.id) state.activeId = state.apps[0].id;
+            save(); renderList(); renderTabs();
+          }
+        });
+        listEl.appendChild(item);
+      });
+    }
+    renderList();
+    wrap.querySelector("#addProjectCfgBtn").addEventListener("click", function(){
+      var input = wrap.querySelector("#newProjectNameCfg");
+      var name = input.value.trim();
+      if(!name) return;
+      var id = uid("app");
+      state.apps.push({ id:id, name:name, settings:{ store:"Google Play" }, draft: defaultDraft("R$ 3.000"), photoLibrary: [], externalCreatives: [], creatives: [] });
+      save();
+      input.value = "";
+      renderList();
+      renderTabs();
+    });
+    return wrap;
+  }
+
+  function buildConfigWorkspace(){
+    var wrap = document.createElement("div");
+    var ws = state.workspace;
+
+    var monitorBlock = document.createElement("div");
+    monitorBlock.className = "config-block";
+    monitorBlock.innerHTML =
+      '<h3>Monitor de contas</h3>' +
+      '<p class="config-desc">De quanto em quanto tempo o sistema confere no Meta o status das contas (ativa/bloqueada) e avisa mudanças no Início.</p>' +
+      '<label style="display:block;margin-bottom:8px">Auto-verificar a cada:</label>' +
+      '<div class="config-chip-row" id="monitorChips"></div>';
+    var chipsEl = monitorBlock.querySelector("#monitorChips");
+    var intervals = [{v:5,l:"5 min"},{v:15,l:"15 min"},{v:30,l:"30 min"},{v:60,l:"1h"},{v:360,l:"6h"}];
+    function renderChips(){
+      chipsEl.innerHTML = "";
+      intervals.forEach(function(it){
+        var chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "config-chip"+(ws.monitorInterval===it.v?" active":"");
+        chip.textContent = it.l;
+        chip.addEventListener("click", function(){
+          ws.monitorInterval = it.v; save(); renderChips();
+        });
+        chipsEl.appendChild(chip);
+      });
+    }
+    renderChips();
+    wrap.appendChild(monitorBlock);
+
+    var aiIntro = document.createElement("div");
+    aiIntro.className = "config-block";
+    aiIntro.innerHTML =
+      '<h3>APIs de IA (Fábrica de Criativos)</h3>' +
+      '<p class="config-desc">Chaves ficam salvas só no seu navegador (localStorage).</p>' +
+      '<div class="config-banner info">🔧 Aqui já dá pra guardar suas chaves e escolher modelo — as chamadas de verdade pra cada provedor entram numa próxima atualização.</div>';
+    wrap.appendChild(aiIntro);
+
+    var providers = [
+      { key:"openrouter", name:"OpenRouter", desc:"Motor de design (HTML) — decide a qualidade do criativo.", presets:["anthropic/claude-haiku-4.5","google/gemini-2.5-pro","openai/gpt-5.1","google/gemini-2.5-flash"] },
+      { key:"gemini", name:"Google Gemini", desc:"Juiz visual (QA das imagens) + fallback de design/copy.", presets:["gemini-2.5-flash","gemini-2.5-pro"] },
+      { key:"cerebras", name:"Cerebras", desc:"Fallback de volume do design (rápido).", presets:["gpt-oss-120b"] },
+      { key:"groq", name:"Groq", desc:"Gera a copy/conceitos dos criativos (não a imagem).", presets:["llama-3.3-70b-versatile","kimi-k2-instruct"] },
+      { key:"anthropic", name:"Anthropic (Claude)", desc:"Copy premium opcional (topo da cascata, antes do Groq).", presets:["claude-sonnet-4-6","claude-haiku-4-5"] }
+    ];
+    providers.forEach(function(p){
+      var pdata = ws.aiProviders[p.key] || { apiKey:"", model:"" };
+      var block = document.createElement("div");
+      block.className = "config-block";
+      block.innerHTML =
+        '<h3 style="text-transform:none;font-size:1rem;color:var(--text)">'+xmlEscape(p.name)+
+          (pdata.apiKey?' <span style="color:var(--accent-strong);font-size:.72rem;text-transform:uppercase;font-weight:700">· configurada</span>':' <span style="color:var(--text-faint);font-size:.72rem;text-transform:uppercase">· não configurada</span>')+
+        '</h3>' +
+        '<p class="config-desc">'+xmlEscape(p.desc)+'</p>' +
+        '<div class="config-row">' +
+          '<input type="password" placeholder="cole a chave da API" class="apiKeyInput" value="'+xmlEscape(pdata.apiKey)+'" />' +
+          '<input type="text" placeholder="modelo" class="modelInput" value="'+xmlEscape(pdata.model)+'" />' +
+        '</div>' +
+        '<div class="config-chip-row">' +
+          p.presets.map(function(m){ return '<button type="button" class="config-chip'+(pdata.model===m?" active":"")+'" data-model="'+xmlEscape(m)+'">'+xmlEscape(m)+'</button>'; }).join("") +
+        '</div>' +
+        '<button type="button" class="btn-primary btn-sm saveProviderBtn">Salvar</button>';
+      var modelInput = block.querySelector(".modelInput");
+      block.querySelectorAll("[data-model]").forEach(function(chip){
+        chip.addEventListener("click", function(){ modelInput.value = chip.getAttribute("data-model"); });
+      });
+      block.querySelector(".saveProviderBtn").addEventListener("click", function(){
+        ws.aiProviders[p.key] = {
+          apiKey: block.querySelector(".apiKeyInput").value.trim(),
+          model: modelInput.value.trim()
+        };
+        save();
+        renderPanels();
+      });
+      wrap.appendChild(block);
+    });
+
+    var backupBlock = document.createElement("div");
+    backupBlock.className = "config-block";
+    backupBlock.innerHTML =
+      '<h3>Backup local</h3>' +
+      '<p class="config-desc">Essa versão guarda tudo só no seu navegador — exporte de vez em quando pra não perder nada.</p>' +
+      '<div class="dl-actions">' +
+        '<button type="button" class="btn-primary btn-sm" id="wsExportBtn">⭳ Exportar dados</button>' +
+        '<button type="button" class="btn-sm" id="wsImportBtn">⭱ Importar dados</button>' +
+      '</div>';
+    backupBlock.querySelector("#wsExportBtn").addEventListener("click", triggerExportBackup);
+    backupBlock.querySelector("#wsImportBtn").addEventListener("click", triggerImportBackup);
+    wrap.appendChild(backupBlock);
+
+    return wrap;
+  }
+
+  function buildInicioPage(){
+    var wrap = document.createElement("section");
+    wrap.className = "panel active config-page";
+    var totalCreatives = 0, totalAtivos = 0, totalUtilizados = 0, totalRejeitados = 0;
+    state.apps.forEach(function(a){
+      totalCreatives += a.creatives.length;
+      a.creatives.forEach(function(c){
+        if(c.reviewStatus==="utilizado") totalUtilizados++;
+        else if(c.reviewStatus==="rejeitado") totalRejeitados++;
+        else totalAtivos++;
+      });
+    });
+    wrap.innerHTML =
+      '<h2 style="margin:0 0 4px">Início</h2>' +
+      '<p class="hint" style="margin-bottom:20px">Resumo local de todos os seus projetos — nenhum dado do Meta ainda, isso vem na próxima etapa (Vercel + API).</p>' +
+      '<div class="dash-stats">' +
+        '<div class="dash-stat-card"><div class="num">'+state.apps.length+'</div><div class="lbl">Projetos</div></div>' +
+        '<div class="dash-stat-card"><div class="num">'+totalCreatives+'</div><div class="lbl">Criativos no total</div></div>' +
+        '<div class="dash-stat-card"><div class="num">'+totalAtivos+'</div><div class="lbl">A revisar (Ativos)</div></div>' +
+        '<div class="dash-stat-card"><div class="num">'+totalUtilizados+'</div><div class="lbl">Aprovados (Utilizados)</div></div>' +
+      '</div>';
+
+    var listBlock = document.createElement("div");
+    listBlock.className = "config-block";
+    listBlock.innerHTML = '<h3>Seus projetos</h3><p class="config-desc">Clique em Abrir pra ir direto pra Fábrica daquele projeto.</p><div class="dash-project-list" id="dashProjList"></div>';
+    wrap.appendChild(listBlock);
+
+    var listEl = listBlock.querySelector("#dashProjList");
+    state.apps.forEach(function(a){
+      var utilizados = a.creatives.filter(function(c){ return c.reviewStatus==="utilizado"; }).length;
+      var ativos = a.creatives.filter(function(c){ return c.reviewStatus==="ativo"; }).length;
+      var item = document.createElement("div");
+      item.className = "dash-project-item";
+      item.innerHTML =
+        '<div><div class="name">'+xmlEscape(a.name)+'</div><div class="sub">'+a.creatives.length+' criativo'+(a.creatives.length===1?"":"s")+' · '+a.externalCreatives.length+' externo'+(a.externalCreatives.length===1?"":"s")+'</div></div>' +
+        '<div style="display:flex;align-items:center;gap:14px">' +
+          '<div class="badges">' +
+            (ativos ? '<span class="dash-badge">'+ativos+' a revisar</span>' : '') +
+            (utilizados ? '<span class="dash-badge">'+utilizados+' aprovados</span>' : '') +
+          '</div>' +
+          '<button type="button" class="btn-primary btn-sm openBtn">Abrir</button>' +
+        '</div>';
+      item.querySelector(".openBtn").addEventListener("click", function(){
+        state.activeId = a.id; state.navView = "fabrica";
+        save(); render();
+      });
+      listEl.appendChild(item);
+    });
+
+    return wrap;
+  }
+
+  function buildTemplatesPage(){
+    var wrap = document.createElement("section");
+    wrap.className = "panel active config-page";
+    wrap.innerHTML =
+      '<h2 style="margin:0 0 4px">Templates</h2>' +
+      '<p class="hint" style="margin-bottom:20px">Modelos de briefing reutilizáveis — aparecem como botões de preenchimento rápido no BRIEFING da Fábrica de Criativos.</p>';
+
+    var listBlock = document.createElement("div");
+    listBlock.className = "config-block";
+    listBlock.innerHTML =
+      '<h3>Seus modelos</h3>' +
+      '<p class="config-desc">Clique em Editar pra mudar o conteúdo, ou remova o que não usa mais.</p>' +
+      '<div id="tplListEl"></div>' +
+      '<button type="button" class="btn-primary btn-sm" id="tplNewBtn" style="margin-top:12px">+ Novo modelo</button>';
+    wrap.appendChild(listBlock);
+
+    var editorBlock = document.createElement("div");
+    editorBlock.className = "config-block";
+    editorBlock.style.display = "none";
+    wrap.appendChild(editorBlock);
+
+    var listEl = listBlock.querySelector("#tplListEl");
+
+    function closeEditor(){
+      editorBlock.style.display = "none";
+      editorBlock.innerHTML = "";
+    }
+
+    function openEditor(idx){
+      var isNew = idx==null;
+      var tpl = isNew
+        ? { id: uid("tpl"), icon:"📝", label:"", objetivo:"", bulk:"", corpo:"", valor:"", cta:"" }
+        : state.templates[idx];
+      editorBlock.style.display = "block";
+      editorBlock.innerHTML =
+        '<h3>'+(isNew ? "Novo modelo" : "Editar modelo")+'</h3>' +
+        '<div class="config-row">' +
+          '<input type="text" id="tplIcon" placeholder="Emoji (ex: 💳)" value="'+xmlEscape(tpl.icon||"")+'" style="max-width:100px" />' +
+          '<input type="text" id="tplLabel" placeholder="Nome do modelo" value="'+xmlEscape(tpl.label||"")+'" />' +
+        '</div>' +
+        '<label>Objetivo da campanha</label>' +
+        '<textarea id="tplObjetivo" rows="2">'+xmlEscape(tpl.objetivo||"")+'</textarea>' +
+        '<label style="margin-top:10px">Hook | Corpo | CTA (uma linha por criativo)</label>' +
+        '<textarea id="tplBulk" rows="5" class="bulk-textarea">'+xmlEscape(tpl.bulk||"")+'</textarea>' +
+        '<div class="config-row" style="margin-top:10px;align-items:start">' +
+          '<textarea id="tplCorpo" rows="3" placeholder="Corpo padrão">'+xmlEscape(tpl.corpo||"")+'</textarea>' +
+          '<div style="display:flex;flex-direction:column;gap:8px">' +
+            '<input type="text" id="tplValor" placeholder="Valor" value="'+xmlEscape(tpl.valor||"")+'" />' +
+            '<input type="text" id="tplCta" placeholder="CTA padrão" value="'+xmlEscape(tpl.cta||"")+'" />' +
+          '</div>' +
+        '</div>' +
+        '<div class="form-actions" style="margin-top:14px">' +
+          '<button type="button" class="btn-primary btn-sm" id="tplSaveBtn">Salvar modelo</button>' +
+          '<button type="button" class="btn-sm" id="tplCancelBtn">Cancelar</button>' +
+        '</div>';
+
+      editorBlock.querySelector("#tplCancelBtn").addEventListener("click", closeEditor);
+      editorBlock.querySelector("#tplSaveBtn").addEventListener("click", function(){
+        var label = editorBlock.querySelector("#tplLabel").value.trim();
+        if(!label){ alert("Dá um nome pro modelo."); return; }
+        var updated = {
+          id: tpl.id,
+          icon: editorBlock.querySelector("#tplIcon").value.trim() || "📝",
+          label: label,
+          objetivo: editorBlock.querySelector("#tplObjetivo").value,
+          bulk: editorBlock.querySelector("#tplBulk").value,
+          corpo: editorBlock.querySelector("#tplCorpo").value,
+          valor: editorBlock.querySelector("#tplValor").value,
+          cta: editorBlock.querySelector("#tplCta").value
+        };
+        if(isNew){ state.templates.push(updated); } else { state.templates[idx] = updated; }
+        save();
+        closeEditor();
+        renderList();
+      });
+    }
+
+    function renderList(){
+      listEl.innerHTML = "";
+      if(!state.templates.length){ listEl.innerHTML = '<p class="hint">Nenhum modelo cadastrado.</p>'; return; }
+      state.templates.forEach(function(tpl, idx){
+        var item = document.createElement("div");
+        item.className = "config-list-item";
+        var objPreview = (tpl.objetivo||"").slice(0,90) + ((tpl.objetivo||"").length>90 ? "…" : "");
+        item.innerHTML =
+          '<div><div class="name">'+xmlEscape(tpl.icon||"📝")+' '+xmlEscape(tpl.label)+'</div><div class="sub">'+xmlEscape(objPreview)+'</div></div>' +
+          '<div style="display:flex;gap:14px;align-items:center">' +
+            '<button type="button" class="btn-sm edit">Editar</button>' +
+            '<button type="button" class="rm">remover</button>' +
+          '</div>';
+        item.querySelector(".edit").addEventListener("click", function(){ openEditor(idx); });
+        item.querySelector(".rm").addEventListener("click", function(){
+          if(!confirm('Remover o modelo "'+tpl.label+'"?')) return;
+          state.templates.splice(idx,1);
+          save(); renderList();
+        });
+        listEl.appendChild(item);
+      });
+    }
+
+    listBlock.querySelector("#tplNewBtn").addEventListener("click", function(){ openEditor(null); });
+    renderList();
+    return wrap;
+  }
+
+  function buildSubidasPage(){
+    var wrap = document.createElement("section");
+    wrap.className = "panel active config-page";
+    wrap.style.maxWidth = "1200px";
+    var entries = [];
+    state.apps.forEach(function(a){
+      a.creatives.forEach(function(c, i){
+        if(c.reviewStatus==="utilizado") entries.push({ app:a, cre:c, idx:i });
+      });
+    });
+    wrap.innerHTML =
+      '<h2 style="margin:0 0 4px">Subidas</h2>' +
+      '<p class="hint" style="margin-bottom:20px">Todos os criativos marcados como "Utilizados" na Galeria de cada projeto — já aprovados e prontos pra subir manualmente no Meta Ads Manager. Assim que a integração real existir, isso vira automático.</p>' +
+      '<div class="dash-stats">' +
+        '<div class="dash-stat-card"><div class="num">'+entries.length+'</div><div class="lbl">Prontos pra subir</div></div>' +
+      '</div>';
+    if(!entries.length){
+      var empty = document.createElement("p");
+      empty.className = "hint";
+      empty.textContent = 'Nenhum criativo marcado como "Utilizado" ainda. Aprove alguns na Galeria de qualquer projeto (aba Ativos) pra eles aparecerem aqui.';
+      wrap.appendChild(empty);
+      return wrap;
+    }
+    var grid = document.createElement("div");
+    grid.className = "subidas-grid";
+    entries.forEach(function(entry){
+      var app = entry.app, cre = entry.cre, idx = entry.idx;
+      var card = document.createElement("div");
+      card.className = "subidas-card";
+      var posterWrap = document.createElement("div");
+      posterWrap.className = "card-poster";
+      posterWrap.innerHTML = buildPosterSVG(app, cre);
+      card.appendChild(posterWrap);
+      var meta = document.createElement("div");
+      meta.className = "subidas-card-meta";
+      meta.innerHTML = '<div class="proj">'+xmlEscape(app.name)+'</div><div class="hook">'+xmlEscape(String(cre.hook||"").split("\n")[0].slice(0,50))+'</div>';
+      card.appendChild(meta);
+      var actions = document.createElement("div");
+      actions.className = "subidas-card-actions";
+      actions.innerHTML =
+        '<button type="button" class="btn-sm dlStory">Story</button>' +
+        '<button type="button" class="btn-sm dlSquare">Quadrado</button>' +
+        '<button type="button" class="btn-ghost undoBtn" aria-label="Devolver pra Ativos">↩</button>';
+      actions.querySelector(".dlStory").addEventListener("click", function(){
+        downloadPng(buildPosterSVG(app, cre), creativeFilename(app, cre, idx+1));
+      });
+      actions.querySelector(".dlSquare").addEventListener("click", function(){
+        var name = creativeFilename(app, cre, idx+1).replace(/\.png$/, "_quadrado.png");
+        downloadPng(buildFeedSquareSVG(app, cre), name, FEED_SQUARE_H, FEED_SQUARE_H);
+      });
+      actions.querySelector(".undoBtn").addEventListener("click", function(){
+        cre.reviewStatus = "ativo"; save(); renderPanels();
+      });
+      card.appendChild(actions);
+      grid.appendChild(card);
+    });
+    wrap.appendChild(grid);
+    return wrap;
+  }
+
+  function buildCopiesPage(){
+    var wrap = document.createElement("section");
+    wrap.className = "panel active config-page";
+    wrap.innerHTML =
+      '<h2 style="margin:0 0 4px">Copies</h2>' +
+      '<p class="hint" style="margin-bottom:20px">Biblioteca de hook/corpo/CTA prontos pra reaproveitar entre projetos — copia o texto e cola direto no BRIEFING da Fábrica.</p>';
+
+    var formBlock = document.createElement("div");
+    formBlock.className = "config-block";
+    formBlock.innerHTML =
+      '<h3>Nova copy</h3>' +
+      '<div><label>Hook</label><textarea id="cpHook" rows="2" placeholder="Título do anúncio"></textarea></div>' +
+      '<div style="margin-top:8px"><label>Corpo</label><textarea id="cpCorpo" rows="2" placeholder="Texto de apoio"></textarea></div>' +
+      '<div class="config-row" style="margin-top:8px">' +
+        '<input type="text" id="cpCta" placeholder="CTA (ex: Baixar app)" />' +
+        '<input type="text" id="cpTag" placeholder="Etiqueta (opcional, ex: cartão)" />' +
+      '</div>' +
+      '<button type="button" class="btn-primary btn-sm" id="cpAddBtn" style="margin-top:10px">+ Adicionar copy</button>';
+    wrap.appendChild(formBlock);
+
+    var listBlock = document.createElement("div");
+    listBlock.className = "config-block";
+    listBlock.innerHTML = '<h3>Suas copies</h3><div class="copies-grid" id="cpListEl"></div>';
+    wrap.appendChild(listBlock);
+
+    var listEl = listBlock.querySelector("#cpListEl");
+    function renderList(){
+      listEl.innerHTML = "";
+      if(!state.copies.length){ listEl.innerHTML = '<p class="hint">Nenhuma copy salva ainda.</p>'; return; }
+      state.copies.forEach(function(cp, idx){
+        var item = document.createElement("div");
+        item.className = "copy-item";
+        var lineText = (cp.hook||"") + " | " + (cp.corpo||"") + " | " + (cp.cta||"");
+        item.innerHTML =
+          '<div class="hook">'+xmlEscape(cp.hook||"")+(cp.tag ? ' <span class="dash-badge" style="margin-left:6px">'+xmlEscape(cp.tag)+'</span>' : '')+'</div>' +
+          '<div class="corpo">'+xmlEscape(cp.corpo||"")+'</div>' +
+          '<div class="cta">CTA: '+xmlEscape(cp.cta||"")+'</div>' +
+          '<div class="copy-item-actions">' +
+            '<button type="button" class="btn-sm copyBtn">📋 Copiar linha (Hook | Corpo | CTA)</button>' +
+            '<button type="button" class="rm">remover</button>' +
+          '</div>';
+        item.querySelector(".copyBtn").addEventListener("click", function(){
+          var btn = item.querySelector(".copyBtn");
+          var restore = btn.textContent;
+          if(navigator.clipboard && navigator.clipboard.writeText){
+            navigator.clipboard.writeText(lineText).then(function(){
+              btn.textContent = "Copiado!";
+              setTimeout(function(){ btn.textContent = restore; }, 1500);
+            }).catch(function(){ prompt("Copie manualmente:", lineText); });
+          } else {
+            prompt("Copie manualmente:", lineText);
+          }
+        });
+        item.querySelector(".rm").addEventListener("click", function(){
+          if(!confirm("Remover essa copy?")) return;
+          state.copies.splice(idx,1);
+          save(); renderList();
+        });
+        listEl.appendChild(item);
+      });
+    }
+    renderList();
+
+    formBlock.querySelector("#cpAddBtn").addEventListener("click", function(){
+      var hook = formBlock.querySelector("#cpHook").value.trim();
+      if(!hook){ alert("Pelo menos o Hook é obrigatório."); return; }
+      state.copies.push({
+        id: uid("copy"),
+        hook: hook,
+        corpo: formBlock.querySelector("#cpCorpo").value.trim(),
+        cta: formBlock.querySelector("#cpCta").value.trim(),
+        tag: formBlock.querySelector("#cpTag").value.trim()
+      });
+      save();
+      formBlock.querySelectorAll("textarea, input").forEach(function(el){ el.value = ""; });
+      renderList();
+    });
+
+    return wrap;
+  }
+
+  function campaignObjectiveLabel(o){
+    return { instalacoes:"Instalações do app", trafego:"Tráfego", conversoes:"Conversões", reconhecimento:"Reconhecimento de marca" }[o] || o;
+  }
+
+  function buildNovaCampanhaPage(){
+    var wrap = document.createElement("section");
+    wrap.className = "panel active config-page";
+    wrap.innerHTML =
+      '<h2 style="margin:0 0 4px">Nova campanha</h2>' +
+      '<p class="hint" style="margin-bottom:20px">Monta o plano da campanha e escolhe os criativos aprovados — isso ainda fica só como rascunho local, o botão "Publicar de verdade" chega junto com a integração real do Meta.</p>';
+
+    var utilizadosEntries = [];
+    state.apps.forEach(function(a){
+      a.creatives.forEach(function(c, i){
+        if(c.reviewStatus==="utilizado") utilizadosEntries.push({ app:a, cre:c, idx:i });
+      });
+    });
+
+    var formBlock = document.createElement("div");
+    formBlock.className = "config-block";
+    formBlock.innerHTML =
+      '<h3>Plano da campanha</h3>' +
+      '<div class="config-row">' +
+        '<input type="text" id="ncName" placeholder="Nome da campanha" />' +
+        '<select id="ncObjective">' +
+          '<option value="instalacoes">Instalações do app</option>' +
+          '<option value="trafego">Tráfego</option>' +
+          '<option value="conversoes">Conversões</option>' +
+          '<option value="reconhecimento">Reconhecimento de marca</option>' +
+        '</select>' +
+      '</div>' +
+      '<div class="config-row">' +
+        '<select id="ncBudgetType"><option value="diario">Orçamento diário</option><option value="total">Orçamento total (vitalício)</option></select>' +
+        '<input type="text" id="ncBudgetValue" placeholder="Valor (ex: R$ 150,00)" />' +
+      '</div>' +
+      '<div class="config-row">' +
+        '<input type="date" id="ncStart" />' +
+        '<input type="date" id="ncEnd" placeholder="Sem data final = contínua" />' +
+      '</div>' +
+      '<label>Posicionamentos</label>' +
+      '<div class="briefing-templates" id="ncPlacements">' +
+        ['Feed','Stories','Reels','Marketplace','Coluna direita'].map(function(p){
+          return '<button type="button" class="config-chip" data-placement="'+p+'">'+p+'</button>';
+        }).join("") +
+      '</div>' +
+      '<label style="margin-top:14px">Público (texto livre por enquanto)</label>' +
+      '<input type="text" id="ncAudience" placeholder="Ex: Homens e mulheres, 25-45 anos, Brasil inteiro" />' +
+      '<label style="margin-top:14px">Criativos aprovados disponíveis ('+utilizadosEntries.length+')</label>' +
+      '<div class="hint" style="margin-bottom:8px">Só aparecem aqui os marcados como "Utilizados" na Galeria de cada projeto.</div>' +
+      '<div id="ncCreativeList" style="display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto"></div>' +
+      '<div class="form-actions" style="margin-top:16px">' +
+        '<button type="button" class="btn-primary gen-lote-btn" id="ncSaveBtn">Salvar rascunho</button>' +
+      '</div>';
+    wrap.appendChild(formBlock);
+
+    var creativeListEl = formBlock.querySelector("#ncCreativeList");
+    if(!utilizadosEntries.length){
+      creativeListEl.innerHTML = '<p class="hint">Nenhum criativo aprovado ainda — vá em qualquer projeto, aba Ativos da Galeria, e aprove alguns.</p>';
+    } else {
+      utilizadosEntries.forEach(function(entry, i){
+        var row = document.createElement("label");
+        row.style.cssText = "display:flex;align-items:center;gap:8px;font-size:.85rem;padding:6px 8px;border-radius:8px;background:var(--surface-3)";
+        row.innerHTML =
+          '<input type="checkbox" class="ncCreativeCb" data-i="'+i+'" />' +
+          '<span><strong>'+xmlEscape(entry.app.name)+'</strong> — '+xmlEscape(String(entry.cre.hook||"").split("\n")[0].slice(0,50))+'</span>';
+        creativeListEl.appendChild(row);
+      });
+    }
+
+    formBlock.querySelectorAll("[data-placement]").forEach(function(chip){
+      chip.addEventListener("click", function(){ chip.classList.toggle("active"); });
+    });
+
+    formBlock.querySelector("#ncSaveBtn").addEventListener("click", function(){
+      var name = formBlock.querySelector("#ncName").value.trim();
+      if(!name){ alert("Dá um nome pra campanha."); return; }
+      var placements = Array.from(formBlock.querySelectorAll("[data-placement].active")).map(function(c){ return c.getAttribute("data-placement"); });
+      var creativeRefs = Array.from(formBlock.querySelectorAll(".ncCreativeCb:checked")).map(function(cb){
+        var entry = utilizadosEntries[parseInt(cb.getAttribute("data-i"),10)];
+        return { appId: entry.app.id, creId: entry.cre.id };
+      });
+      state.campaignDrafts.push({
+        id: uid("camp"),
+        name: name,
+        objective: formBlock.querySelector("#ncObjective").value,
+        budgetType: formBlock.querySelector("#ncBudgetType").value,
+        budgetValue: formBlock.querySelector("#ncBudgetValue").value.trim(),
+        startDate: formBlock.querySelector("#ncStart").value,
+        endDate: formBlock.querySelector("#ncEnd").value,
+        placements: placements,
+        audience: formBlock.querySelector("#ncAudience").value.trim(),
+        creativeRefs: creativeRefs,
+        createdAt: Date.now()
+      });
+      save();
+      renderPanels();
+    });
+
+    var listBlock = document.createElement("div");
+    listBlock.className = "config-block";
+    listBlock.innerHTML = '<h3>Rascunhos salvos</h3><div id="ncDraftList"></div>';
+    wrap.appendChild(listBlock);
+    var draftListEl = listBlock.querySelector("#ncDraftList");
+    if(!state.campaignDrafts.length){
+      draftListEl.innerHTML = '<p class="hint">Nenhum rascunho salvo ainda.</p>';
+    } else {
+      state.campaignDrafts.slice().reverse().forEach(function(draft){
+        var realIdx = state.campaignDrafts.indexOf(draft);
+        var item = document.createElement("div");
+        item.className = "config-list-item";
+        var budgetLabel = draft.budgetValue ? (draft.budgetType==="diario" ? draft.budgetValue+"/dia" : draft.budgetValue+" total") : "sem orçamento definido";
+        item.innerHTML =
+          '<div><div class="name">'+xmlEscape(draft.name)+'</div>' +
+          '<div class="sub">'+campaignObjectiveLabel(draft.objective)+' · '+xmlEscape(budgetLabel)+' · '+draft.creativeRefs.length+' criativo(s) · '+(draft.placements.length ? draft.placements.join(", ") : "sem posicionamento definido")+'</div></div>' +
+          '<button type="button" class="rm">remover</button>';
+        item.querySelector(".rm").addEventListener("click", function(){
+          if(!confirm('Remover o rascunho "'+draft.name+'"?')) return;
+          state.campaignDrafts.splice(realIdx,1);
+          save(); renderPanels();
+        });
+        draftListEl.appendChild(item);
+      });
+    }
+
+    return wrap;
+  }
+
+  function buildPainelPage(){
+    var wrap = document.createElement("section");
+    wrap.className = "panel active config-page";
+    wrap.style.maxWidth = "1200px";
+    wrap.innerHTML =
+      '<h2 style="margin:0 0 4px">Painel</h2>' +
+      '<div class="mock-banner">⚠️ <strong>Dados de exemplo.</strong> Essa tela mostra o visual de como vai ficar com dados reais do Meta Ads — a conexão de verdade vem na próxima etapa (Vercel + API).</div>';
+
+    var mockCampaigns = [
+      { name:"Cardnix — Instalações BR", status:"ativa", budget:"R$ 150,00/dia", spend:"R$ 1.284,50", results:342, cpr:"R$ 3,76", ctr:"2,4%" },
+      { name:"CS Credit — Tráfego", status:"ativa", budget:"R$ 90,00/dia", spend:"R$ 612,30", results:198, cpr:"R$ 3,09", ctr:"1,9%" },
+      { name:"Bets Brasil — Conversões", status:"pausada", budget:"R$ 300,00/dia", spend:"R$ 4.920,00", results:87, cpr:"R$ 56,55", ctr:"1,1%" },
+      { name:"Empréstimo Brasil — Instalações", status:"ativa", budget:"R$ 120,00/dia", spend:"R$ 890,10", results:265, cpr:"R$ 3,36", ctr:"2,1%" },
+      { name:"Tarjetas Ideales — Tráfego MX", status:"em revisão", budget:"R$ 80,00/dia", spend:"R$ 0,00", results:0, cpr:"—", ctr:"—" }
+    ];
+    var totalSpend = 7706.90, totalResults = 892;
+    wrap.innerHTML +=
+      '<div class="dash-stats">' +
+        '<div class="dash-stat-card"><div class="num">'+mockCampaigns.filter(function(c){return c.status==="ativa";}).length+'</div><div class="lbl">Campanhas ativas</div></div>' +
+        '<div class="dash-stat-card"><div class="num">R$ '+totalSpend.toFixed(2).replace(".",",")+'</div><div class="lbl">Investido (30d)</div></div>' +
+        '<div class="dash-stat-card"><div class="num">'+totalResults+'</div><div class="lbl">Resultados (30d)</div></div>' +
+      '</div>';
+
+    var tableWrap = document.createElement("div");
+    tableWrap.className = "config-block";
+    tableWrap.style.overflowX = "auto";
+    var rows = mockCampaigns.map(function(c){
+      var statusClass = c.status==="ativa" ? "st-testando" : (c.status==="pausada" ? "st-pausado" : "st-venceu");
+      return '<tr>' +
+        '<td style="font-weight:700">'+xmlEscape(c.name)+'</td>' +
+        '<td><span class="status-select '+statusClass+'" style="display:inline-block;padding:4px 10px;border-radius:6px;font-size:.74rem;font-weight:700">'+xmlEscape(c.status)+'</span></td>' +
+        '<td>'+xmlEscape(c.budget)+'</td>' +
+        '<td>'+xmlEscape(c.spend)+'</td>' +
+        '<td>'+c.results+'</td>' +
+        '<td>'+xmlEscape(c.cpr)+'</td>' +
+        '<td>'+xmlEscape(c.ctr)+'</td>' +
+      '</tr>';
+    }).join("");
+    tableWrap.innerHTML =
+      '<h3>Campanhas (exemplo)</h3>' +
+      '<table style="width:100%;border-collapse:collapse;font-size:.85rem">' +
+        '<thead><tr style="text-align:left;color:var(--text-muted);font-size:.74rem;text-transform:uppercase;letter-spacing:.4px">' +
+          '<th style="padding:8px">Campanha</th><th style="padding:8px">Status</th><th style="padding:8px">Orçamento</th>' +
+          '<th style="padding:8px">Gasto</th><th style="padding:8px">Resultados</th><th style="padding:8px">Custo/result.</th><th style="padding:8px">CTR</th>' +
+        '</tr></thead>' +
+        '<tbody>'+rows+'</tbody>' +
+      '</table>';
+    wrap.appendChild(tableWrap);
+
+    return wrap;
+  }
+
+  function buildMiniBarChartSVG(data, W, H, color){
+    var maxV = Math.max.apply(null, data.map(function(d){ return d.value; }));
+    if(maxV<=0) maxV = 1;
+    var padL = 4, padB = 22, chartW = W-padL*2, chartH = H-padB;
+    var barGap = 6, barW = (chartW/data.length) - barGap;
+    var svg = ['<svg xmlns="http://www.w3.org/2000/svg" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'">'];
+    data.forEach(function(d, i){
+      var barH = Math.max(2, (d.value/maxV) * (chartH-10));
+      var x = padL + i*(barW+barGap);
+      var y = chartH - barH;
+      svg.push('<rect x="'+x+'" y="'+y+'" width="'+barW+'" height="'+barH+'" rx="3" fill="'+color+'" opacity="'+(i===data.length-1?1:0.55)+'"/>');
+      if(i % Math.ceil(data.length/7) === 0){
+        svg.push('<text x="'+(x+barW/2)+'" y="'+(H-6)+'" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="var(--text-faint)">'+xmlEscape(d.label)+'</text>');
+      }
+    });
+    svg.push('</svg>');
+    return svg.join("");
+  }
+
+  function buildMetricasPage(){
+    var wrap = document.createElement("section");
+    wrap.className = "panel active config-page";
+    wrap.style.maxWidth = "1200px";
+    wrap.innerHTML =
+      '<h2 style="margin:0 0 4px">Métricas</h2>' +
+      '<div class="mock-banner">⚠️ <strong>Dados de exemplo.</strong> Gráficos e números fixos só pra mostrar o visual — os números reais chegam junto com a integração do Meta Ads.</div>';
+
+    var days = [];
+    var seed = 42;
+    function rnd(){ seed = (seed*1103515245+12345) & 0x7fffffff; return seed / 0x7fffffff; }
+    for(var i=13;i>=0;i--){
+      var d = new Date(Date.now() - i*86400000);
+      days.push({ label: (d.getMonth()+1)+"/"+d.getDate(), value: Math.round(180 + rnd()*420) });
+    }
+
+    wrap.innerHTML +=
+      '<div class="dash-stats">' +
+        '<div class="dash-stat-card"><div class="num">184.2k</div><div class="lbl">Impressões (14d)</div></div>' +
+        '<div class="dash-stat-card"><div class="num">4.096</div><div class="lbl">Cliques no link</div></div>' +
+        '<div class="dash-stat-card"><div class="num">2,23%</div><div class="lbl">CTR médio</div></div>' +
+        '<div class="dash-stat-card"><div class="num">R$ 1,89</div><div class="lbl">CPC médio</div></div>' +
+      '</div>';
+
+    var chartBlock = document.createElement("div");
+    chartBlock.className = "config-block";
+    chartBlock.innerHTML = '<h3>Investimento por dia (últimos 14 dias)</h3><div id="chartHolder" style="margin-top:10px"></div>';
+    chartBlock.querySelector("#chartHolder").innerHTML = buildMiniBarChartSVG(days, 1080, 220, "#6f5bd6");
+    wrap.appendChild(chartBlock);
+
+    var mockByApp = [
+      { name:"Cardnix", impressions:"52.480", clicks:1284, ctr:"2,45%", cpc:"R$ 1,72" },
+      { name:"CS Credit", impressions:"38.910", clicks:842, ctr:"2,16%", cpc:"R$ 1,88" },
+      { name:"Bets Brasil", impressions:"61.200", clicks:987, ctr:"1,61%", cpc:"R$ 2,34" },
+      { name:"Empréstimo Brasil", impressions:"31.640", clicks:983, ctr:"3,11%", cpc:"R$ 1,45" }
+    ];
+    var tableBlock = document.createElement("div");
+    tableBlock.className = "config-block";
+    tableBlock.style.overflowX = "auto";
+    tableBlock.innerHTML =
+      '<h3>Por projeto (exemplo)</h3>' +
+      '<table style="width:100%;border-collapse:collapse;font-size:.85rem">' +
+        '<thead><tr style="text-align:left;color:var(--text-muted);font-size:.74rem;text-transform:uppercase;letter-spacing:.4px">' +
+          '<th style="padding:8px">Projeto</th><th style="padding:8px">Impressões</th><th style="padding:8px">Cliques</th><th style="padding:8px">CTR</th><th style="padding:8px">CPC</th>' +
+        '</tr></thead>' +
+        '<tbody>' + mockByApp.map(function(r){
+          return '<tr><td style="padding:8px;font-weight:700">'+xmlEscape(r.name)+'</td><td style="padding:8px">'+r.impressions+'</td>' +
+            '<td style="padding:8px">'+r.clicks+'</td><td style="padding:8px">'+r.ctr+'</td><td style="padding:8px">'+r.cpc+'</td></tr>';
+        }).join("") +
+        '</tbody>' +
+      '</table>';
+    wrap.appendChild(tableBlock);
+
+    return wrap;
+  }
+
+  function buildSimpleListBlock(cfg){
+    var block = document.createElement("div");
+    block.className = "config-block";
+    var fieldsHtml = cfg.fields.map(function(f){
+      return '<input type="text" class="cfgField" data-key="'+f.key+'" placeholder="'+xmlEscape(f.placeholder)+'" />';
+    }).join("");
+    block.innerHTML =
+      '<h3>'+xmlEscape(cfg.title)+'</h3>' +
+      '<p class="config-desc">'+xmlEscape(cfg.desc)+'</p>' +
+      '<div id="listEl"></div>' +
+      '<div class="config-row">'+fieldsHtml+'</div>' +
+      '<button type="button" class="btn-primary btn-sm addBtn">'+xmlEscape(cfg.addLabel)+'</button>';
+    var listEl = block.querySelector("#listEl");
+    function renderList(){
+      listEl.innerHTML = "";
+      if(!cfg.items.length){ listEl.innerHTML = '<p class="hint">Nenhum cadastrado.</p>'; return; }
+      cfg.items.forEach(function(it, idx){
+        var item = document.createElement("div");
+        item.className = "config-list-item";
+        item.innerHTML =
+          '<div><div class="name">'+xmlEscape(cfg.displayName(it))+'</div><div class="sub">'+xmlEscape(cfg.displaySub(it))+'</div></div>' +
+          '<button type="button" class="rm">remover</button>';
+        item.querySelector(".rm").addEventListener("click", function(){
+          cfg.items.splice(idx,1);
+          save(); renderList();
+        });
+        listEl.appendChild(item);
+      });
+    }
+    renderList();
+    block.querySelector(".addBtn").addEventListener("click", function(){
+      var obj = {};
+      var valid = false;
+      block.querySelectorAll(".cfgField").forEach(function(inp){
+        var v = inp.value.trim();
+        obj[inp.getAttribute("data-key")] = v;
+        if(v) valid = true;
+      });
+      if(!valid) return;
+      cfg.items.push(obj);
+      save();
+      block.querySelectorAll(".cfgField").forEach(function(inp){ inp.value=""; });
+      renderList();
+    });
+    return block;
+  }
+
+  function buildConfigAtivos(){
+    var wrap = document.createElement("div");
+    var ws = state.workspace;
+
+    var accBlock = document.createElement("div");
+    accBlock.className = "config-block";
+    accBlock.innerHTML =
+      '<h3>Contas de anúncio</h3>' +
+      '<p class="config-desc">Contas do Meta Ads Manager usadas pra subir os criativos.</p>' +
+      '<div id="accListEl"></div>' +
+      '<div class="config-banner info" style="margin-top:14px">🔧 "Descobrir pelo token" (importar contas automaticamente do Meta) ainda não está conectado — entra numa próxima atualização. Por enquanto, adicione manualmente abaixo.</div>' +
+      '<div class="config-row">' +
+        '<input type="text" id="accIdInput" placeholder="act_xxxx... (ID da conta) *" />' +
+        '<input type="text" id="accNameInput" placeholder="Nome (opcional)" />' +
+      '</div>' +
+      '<div class="config-row">' +
+        '<input type="text" id="accCurrencyInput" placeholder="Moeda (ex: USD, BRL)" value="USD" />' +
+        '<input type="text" id="accTokenInput" placeholder="Token de acesso (opcional por agora)" />' +
+      '</div>' +
+      '<button type="button" class="btn-primary btn-sm" id="addAccBtn">+ Adicionar conta</button>';
+    var accListEl = accBlock.querySelector("#accListEl");
+    function renderAccList(){
+      accListEl.innerHTML = "";
+      if(!ws.adAccounts.length){ accListEl.innerHTML = '<p class="hint">Nenhuma conta ainda.</p>'; return; }
+      ws.adAccounts.forEach(function(acc){
+        var item = document.createElement("div");
+        item.className = "config-list-item";
+        item.innerHTML =
+          '<div><div class="name">'+xmlEscape(acc.name||acc.id)+'</div><div class="sub">'+xmlEscape(acc.id)+' · '+xmlEscape(acc.currency||"USD")+'</div></div>' +
+          '<button type="button" class="rm">remover</button>';
+        item.querySelector(".rm").addEventListener("click", function(){
+          ws.adAccounts = ws.adAccounts.filter(function(a){ return a.id!==acc.id; });
+          save(); renderAccList();
+        });
+        accListEl.appendChild(item);
+      });
+    }
+    renderAccList();
+    accBlock.querySelector("#addAccBtn").addEventListener("click", function(){
+      var idVal = accBlock.querySelector("#accIdInput").value.trim();
+      if(!idVal) return;
+      ws.adAccounts.push({
+        id: idVal,
+        name: accBlock.querySelector("#accNameInput").value.trim(),
+        currency: accBlock.querySelector("#accCurrencyInput").value.trim()||"USD",
+        token: accBlock.querySelector("#accTokenInput").value.trim()
+      });
+      save();
+      accBlock.querySelector("#accIdInput").value="";
+      accBlock.querySelector("#accNameInput").value="";
+      accBlock.querySelector("#accTokenInput").value="";
+      renderAccList();
+    });
+    wrap.appendChild(accBlock);
+
+    wrap.appendChild(buildSimpleListBlock({
+      title: "Apps mobile",
+      desc: "Apps vinculados às campanhas de instalação.",
+      items: ws.mobileApps,
+      fields: [
+        { key:"name", placeholder:"Nome do app" },
+        { key:"applicationId", placeholder:"application_id (Meta)" },
+        { key:"playLink", placeholder:"Link da Play (ou package)" }
+      ],
+      addLabel: "+ Adicionar app",
+      displayName: function(it){ return it.name || it.applicationId || "App"; },
+      displaySub: function(it){ return [it.applicationId, it.playLink].filter(Boolean).join(" · "); }
+    }));
+
+    wrap.appendChild(buildSimpleListBlock({
+      title: "Páginas do Facebook (pool de rotação)",
+      desc: "Páginas usadas nos anúncios.",
+      items: ws.facebookPages,
+      fields: [
+        { key:"pageId", placeholder:"page_id" },
+        { key:"name", placeholder:"Nome (opcional)" }
+      ],
+      addLabel: "+ Adicionar página",
+      displayName: function(it){ return it.name || it.pageId || "Página"; },
+      displaySub: function(it){ return it.pageId||""; }
+    }));
+
+    wrap.appendChild(buildSimpleListBlock({
+      title: "Pixels (p/ conversão)",
+      desc: "Pixels do Meta pra rastrear conversões.",
+      items: ws.pixels,
+      fields: [
+        { key:"name", placeholder:"Nome (ex: Finanças BR)" },
+        { key:"pixelId", placeholder:"pixel_id (número)" }
+      ],
+      addLabel: "+ Adicionar pixel",
+      displayName: function(it){ return it.name || it.pixelId || "Pixel"; },
+      displaySub: function(it){ return it.pixelId||""; }
+    }));
+
+    return wrap;
   }
 
   function buildPanel(app){
@@ -2924,11 +4665,34 @@
     panel.className = "panel" + (app.id===state.activeId ? " active" : "");
     var draft = app.draft;
 
+    // ---- fixed page header (matches "Fábrica de Criativos" reference) ----
+    var pageHead = document.createElement("div");
+    pageHead.className = "fabrica-head";
+    pageHead.innerHTML =
+      '<h1>Fábrica de Criativos</h1>' +
+      '<p class="hint" style="margin-top:2px">Descreva o objetivo → gera copy + arte em lote → você aprova → sobe na campanha (PAUSED).</p>' +
+      '<button type="button" class="collapsible-bar" id="costBarBtn">💰 <strong>Custo de IA</strong> · hoje $0,00 (sem teto) · 30d: $0,00 <span class="chev">▾</span></button>' +
+      '<div class="collapsible-body" id="costBarBody" style="display:none">Esse projeto usa o motor "Templates (fixo)" — geração 100% local, sem chamada de IA, então o custo é sempre $0.</div>' +
+      '<button type="button" class="collapsible-bar" id="howBarBtn">Como funciona? <span class="chev">▾</span></button>' +
+      '<div class="collapsible-body" id="howBarBody" style="display:none">' +
+        'Preenche o briefing (ou usa um modelo pronto) → cola as linhas de Hook | Corpo | CTA → clica "Gerar lote" → revisa na galeria (Ativos/Rejeitados/Utilizados) → baixa imagem ou vídeo do que aprovar.' +
+      '</div>';
+    panel.appendChild(pageHead);
+    pageHead.querySelector("#costBarBtn").addEventListener("click", function(){
+      var body = pageHead.querySelector("#costBarBody");
+      body.style.display = body.style.display==="none" ? "block" : "none";
+    });
+    pageHead.querySelector("#howBarBtn").addEventListener("click", function(){
+      var body = pageHead.querySelector("#howBarBody");
+      body.style.display = body.style.display==="none" ? "block" : "none";
+    });
+
     // head + settings (store only — color now lives per creative)
     var head = document.createElement("div");
     head.className = "app-head";
     var isAppType = app.settings.visualType!=="cash";
     head.innerHTML =
+      '<label class="hint" style="margin:0">Projeto:</label>' +
       '<input class="app-name" value="'+xmlEscape(app.name)+'" aria-label="Nome do projeto" />' +
       '<div class="settings-inline">' +
         (isAppType ? '<div class="settings-field"><label style="margin-right:2px">Loja</label><select id="storeSel">' +
@@ -2963,24 +4727,64 @@
 
     var nextColorSample = nextColor(app);
     var formCard = document.createElement("div");
-    formCard.className = "form-card";
+    formCard.className = "form-card briefing-card";
     formCard.innerHTML =
-      '<div class="block-head"><span class="block-title">Gerar lote automático</span><span class="block-sub">'+app.creatives.length+'/'+MAX_CREATIVES+' no projeto</span></div>' +
-      '<label>Uma combinação por linha. Só o hook funciona (usa os campos abaixo como padrão), ou cole <code>Hook | Corpo | CTA</code> — aceita colar direto de planilha. Cada linha vira um criativo com cor E formato de layout diferentes automaticamente (dividido / ficha inferior / selo central).</label>' +
+      '<div class="briefing-label">BRIEFING</div>' +
+      '<label>Modelos de briefing · preenche o objetivo e os campos — troque [NOME DO APP] e escolha marca/idioma (edite ou crie os seus em Templates)</label>' +
+      '<div class="briefing-templates">' +
+        state.templates.map(function(t){
+          return '<button type="button" class="config-chip" data-tpl="'+t.id+'">'+xmlEscape(t.icon||"📝")+' '+xmlEscape(t.label)+'</button>';
+        }).join("") +
+      '</div>' +
+      '<label style="margin-top:14px">Objetivo da campanha</label>' +
+      '<textarea id="fObjetivo" rows="3" placeholder="Descreva o público, a oferta e o objetivo da campanha...">'+xmlEscape(draft.objetivo||"")+'</textarea>' +
+      '<div class="shared-fields">' +
+        '<div><label>Marca (estampa)</label><input id="fCardName" placeholder="'+xmlEscape(app.name)+'" value="'+xmlEscape(draft.cardName||"")+'" /></div>' +
+        '<div><label>Qtd. de criativos</label><input id="fQtd" type="number" min="1" max="'+MAX_CREATIVES+'" value="'+MAX_CREATIVES+'" /></div>' +
+        '<div><label>App (opcional)</label><select id="fAppSel"><option>— nenhum —</option></select></div>' +
+        '<div><label>Badge Google Play</label><select id="fBadgeSel"><option>Auto (detecta app)</option><option>Sempre</option><option>Nunca</option></select></div>' +
+        '<div><label>Motor de arte</label><select id="fMotorSel" disabled><option>Templates (fixo, $0)</option></select>' +
+          '<div class="hint">Geração por IA (variação máxima) entra numa próxima etapa — por ora é sempre templates fixos, sem custo.</div></div>' +
+        '<div><label>Idioma dos textos</label><input value="'+(app.settings.locale==="es-MX"?"Español (MX)":"Português (BR)")+'" disabled /></div>' +
+      '</div>' +
+      '<div class="briefing-divider">Cole abaixo o Hook | Corpo | CTA de cada criativo (uma linha por criativo):</div>' +
+      '<label>Uma combinação por linha. Só o hook funciona (usa os campos abaixo como padrão), ou cole <code>Hook | Corpo | CTA</code> — aceita colar direto de planilha. Cada linha vira um criativo com cor E formato de layout diferentes automaticamente.</label>' +
       '<textarea id="fBulk" class="bulk-textarea">'+xmlEscape(draft.bulk)+'</textarea>' +
       '<div class="shared-fields">' +
         '<div class="full"><label>Corpo padrão — 1ª linha é o subtítulo, as demais viram os selos de confiança</label><textarea id="fCorpo" rows="3">'+xmlEscape(draft.corpo)+'</textarea></div>' +
         '<div><label>Valor</label><input id="fValor" value="'+xmlEscape(draft.valor)+'" /></div>' +
         '<div><label>CTA padrão</label><input id="fCta" value="'+xmlEscape(draft.cta)+'" /></div>' +
-        '<div><label>'+(app.settings.visualType==="cash"?"Texto no dinheiro (opcional)":"Nome no cartão (opcional)")+'</label><input id="fCardName" placeholder="'+xmlEscape(app.name)+'" value="'+xmlEscape(draft.cardName||"")+'" />' +
-          '<div class="hint">Em branco usa o nome do projeto. Use algo real/seu — nomes de terceiros (bancos, programas do governo) não, é risco de banimento e é enganoso.</div></div>' +
-        '<div class="full"><label>Biblioteca de fotos (opcional) — envie fotos simples de pessoa/produto (não anúncios prontos). Elas se repetem entre os criativos do lote se houver menos fotos que linhas.</label>' +
-          '<input type="file" id="fPhotoAdd" accept="image/*" multiple />' +
-          '<div class="lib-row" id="libRow"></div></div>' +
       '</div>' +
       '<div class="compliance-warn" id="complianceWarn" style="display:none"></div>' +
-      '<div class="form-actions"><button type="button" class="btn-primary" id="genBtn">Gerar lote</button><span class="hint" id="capHint"></span></div>';
+      '<div class="form-actions"><button type="button" class="btn-primary gen-lote-btn" id="genBtn">Gerar lote</button><span class="hint" id="capHint"></span></div>';
     creator.appendChild(formCard);
+
+    var fObjetivo = formCard.querySelector("#fObjetivo");
+    fObjetivo.addEventListener("input", function(){ draft.objetivo = fObjetivo.value; save(); });
+    formCard.querySelectorAll("[data-tpl]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var t = state.templates.filter(function(tt){ return tt.id===btn.getAttribute("data-tpl"); })[0];
+        if(!t) return;
+        fObjetivo.value = t.objetivo;
+        formCard.querySelector("#fBulk").value = t.bulk;
+        formCard.querySelector("#fCorpo").value = t.corpo;
+        formCard.querySelector("#fValor").value = t.valor;
+        formCard.querySelector("#fCta").value = t.cta;
+        draft.objetivo = t.objetivo; draft.bulk = t.bulk; draft.corpo = t.corpo; draft.valor = t.valor; draft.cta = t.cta;
+        save();
+        formCard.querySelector("#fBulk").dispatchEvent(new Event("input"));
+      });
+    });
+
+    var photoLibraryBlock = document.createElement("div");
+    photoLibraryBlock.className = "form-card";
+    photoLibraryBlock.style.marginTop = "18px";
+    photoLibraryBlock.innerHTML =
+      '<div class="briefing-label">ENVIAR IMAGENS PRÓPRIAS</div>' +
+      '<p class="hint">Suas imagens viram criativos na galeria — gere o vídeo depois no botão 🎬 de cada card. Elas se repetem entre os criativos do lote se houver menos fotos que linhas.</p>' +
+      '<input type="file" id="fPhotoAdd" accept="image/*" multiple />' +
+      '<div class="lib-row" id="libRow"></div>';
+    creator.appendChild(photoLibraryBlock);
 
     var previewCard = document.createElement("div");
     previewCard.className = "preview-card";
@@ -3019,7 +4823,7 @@
     }); });
 
     // photo library
-    var libRow = formCard.querySelector("#libRow");
+    var libRow = photoLibraryBlock.querySelector("#libRow");
     function renderLib(){
       libRow.innerHTML = "";
       app.photoLibrary.forEach(function(url, i){
@@ -3033,7 +4837,7 @@
       });
     }
     renderLib();
-    formCard.querySelector("#fPhotoAdd").addEventListener("change", function(e){
+    photoLibraryBlock.querySelector("#fPhotoAdd").addEventListener("change", function(e){
       var files = Array.from(e.target.files||[]);
       if(!files.length) return;
       Promise.all(files.map(fileToDataUrl)).then(function(urls){
@@ -3054,7 +4858,9 @@
     genBtn.addEventListener("click", function(){
       var room = MAX_CREATIVES - app.creatives.length;
       if(room<=0) return;
-      var lines = fBulk.value.split("\n").map(function(s){ return s.trim(); }).filter(Boolean).slice(0, room);
+      var qtdWanted = parseInt(formCard.querySelector("#fQtd").value, 10) || MAX_CREATIVES;
+      var cap = Math.min(room, qtdWanted);
+      var lines = fBulk.value.split("\n").map(function(s){ return s.trim(); }).filter(Boolean).slice(0, cap);
       lines.forEach(function(line, i){
         var parsed = parseBulkLine(line, fCorpo.value, fCta.value);
         var color = nextColor(app);
@@ -3065,12 +4871,36 @@
       save(); renderPanels();
     });
 
+    // ---- vídeo narrado (preferências do lote) ----
+    var narrationBlock = document.createElement("section");
+    narrationBlock.className = "block";
+    narrationBlock.innerHTML =
+      '<div class="block-head"><span class="block-title">🎙️ Vídeo narrado</span>' +
+      '<span class="block-sub">preferências do lote — a narração continua exigindo upload manual do áudio (sem geração automática)</span></div>' +
+      '<div class="shared-fields" style="margin-top:10px">' +
+        '<div><label>Idioma da narração</label><input value="'+xmlEscape(app.settings.locale==="es-MX" ? "Espanhol (México)" : "Português (Brasil)")+'" disabled /></div>' +
+        '<div><label>Voz (rótulo, pra lembrar qual gerar no ElevenLabs)</label><input id="narrVoiceLabel" placeholder="Ex: Feminina — calma" value="'+xmlEscape(app.settings.narrationVoiceLabel||"")+'" /></div>' +
+        '<div><label>Formato do vídeo/GIF</label><select id="narrFormatSel">' +
+          '<option value="story"'+(app.settings.videoFormat!=="square"?" selected":"")+'>Story (1080×1920)</option>' +
+          '<option value="square"'+(app.settings.videoFormat==="square"?" selected":"")+'>Quadrado (1080×1080)</option>' +
+        '</select></div>' +
+      '</div>';
+    panel.appendChild(narrationBlock);
+    narrationBlock.querySelector("#narrVoiceLabel").addEventListener("input", function(e){
+      app.settings.narrationVoiceLabel = e.target.value; save();
+    });
+    narrationBlock.querySelector("#narrFormatSel").addEventListener("change", function(e){
+      app.settings.videoFormat = e.target.value; save();
+    });
+
     // ---- gallery ----
     var galleryBlock = document.createElement("section");
     galleryBlock.className = "block";
     var hasPausados = app.creatives.some(function(c){ return c.status==="pausado"; });
+    var activeReviewTab = reviewTabByApp[app.id] || "ativo";
+    reviewTabByApp[app.id] = activeReviewTab;
     galleryBlock.innerHTML =
-      '<div class="block-head"><span class="block-title">Lote de criativos</span>' +
+      '<div class="block-head"><span class="block-title">Galeria — '+app.creatives.length+' criativo'+(app.creatives.length===1?"":"s")+'</span>' +
       '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">' +
         '<span class="block-sub">cada um com sua própria cor e foto — edite sem afetar os outros</span>' +
         (app.creatives.length>0 ? '<select id="statusFilterSel" style="width:auto">' +
@@ -3080,7 +4910,10 @@
         (hasPausados ? '<button type="button" class="btn-sm" id="rmPausadosBtn">Remover pausados</button>' : '') +
         (app.creatives.length>0 ? '<button type="button" class="btn-sm" id="batchVideoBtn">🎬 Gerar vídeos do lote</button>' : '') +
         (app.creatives.length>0 ? '<button type="button" class="btn-sm" id="batchDlVideosBtn">Baixar vídeos (.zip)</button>' : '') +
-        (app.creatives.length>0 ? '<button type="button" class="btn-primary btn-sm" id="batchDlBtn">Baixar imagens (.zip)</button>' : '') +
+        (app.creatives.length>0 ? '<button type="button" class="btn-sm" id="batchGifBtn">🖼️ Gerar GIFs do lote</button>' : '') +
+        (app.creatives.length>0 ? '<button type="button" class="btn-sm" id="batchDlGifsBtn">Baixar GIFs (.zip)</button>' : '') +
+        (app.creatives.length>0 ? '<button type="button" class="btn-primary btn-sm" id="batchDlBtn">Baixar Story (.zip)</button>' : '') +
+        (app.creatives.length>0 ? '<button type="button" class="btn-sm" id="batchDlSquareBtn">📐 Baixar Quadrado (.zip)</button>' : '') +
       '</div></div>';
     if(app.creatives.length===0){
       var empty = document.createElement("div");
@@ -3088,18 +4921,91 @@
       empty.textContent = "Nenhum criativo no lote ainda. Ajuste as linhas acima e clique em \"Gerar lote\".";
       galleryBlock.appendChild(empty);
     } else {
+      var reviewTabsBlock = document.createElement("div");
+      reviewTabsBlock.innerHTML =
+        '<div class="review-tabs" id="reviewTabs">' +
+          REVIEW_STATUSES.map(function(s){
+            var cnt = app.creatives.filter(function(c){ return c.reviewStatus===s; }).length;
+            return '<button type="button" class="review-tab-btn'+(s===activeReviewTab?" active":"")+'" data-tab="'+s+'">'+reviewStatusLabel(s)+' <span class="cnt">'+cnt+'</span></button>';
+          }).join("") +
+        '</div>' +
+        '<div class="review-hint">Rejeitar move o criativo pra "Rejeitados"; aprovar move pra "Utilizados". A aba "Ativos" fica só com o que falta revisar.</div>' +
+        '<div class="bulk-bar" id="bulkBar">' +
+          '<span>Ação em massa: <span class="bulk-count" id="bulkCount">0</span> selecionado(s)</span>' +
+          '<button type="button" class="link-btn" id="selectAllBtn">selecionar todos</button>' +
+          '<button type="button" class="link-btn" id="clearSelBtn">limpar</button>' +
+          '<div class="bulk-actions">' +
+            '<button type="button" class="btn-approve" id="bulkApproveBtn">✓ Aprovar</button>' +
+            '<button type="button" class="btn-reject" id="bulkRejectBtn">✗ Rejeitar</button>' +
+          '</div>' +
+        '</div>';
+      galleryBlock.appendChild(reviewTabsBlock);
+
       var gallery = document.createElement("div");
       gallery.className = "gallery";
-      app.creatives.forEach(function(cre){ gallery.appendChild(buildCard(app, cre)); });
+      var selection = getGallerySelection(app.id);
+      function updateBulkBar(){
+        var bulkCount = galleryBlock.querySelector("#bulkCount");
+        if(bulkCount) bulkCount.textContent = selection.size;
+      }
+      app.creatives.forEach(function(cre){ gallery.appendChild(buildCard(app, cre, updateBulkBar)); });
       galleryBlock.appendChild(gallery);
+      updateBulkBar();
 
       var statusFilterSel = galleryBlock.querySelector("#statusFilterSel");
-      statusFilterSel.addEventListener("change", function(){
-        var val = statusFilterSel.value;
+      function applyGalleryFilters(){
+        var statusVal = statusFilterSel ? statusFilterSel.value : "todos";
+        var tabVal = reviewTabByApp[app.id] || "ativo";
         Array.from(gallery.children).forEach(function(cardEl, i){
           var cre = app.creatives[i];
-          cardEl.style.display = (val==="todos" || cre.status===val) ? "" : "none";
+          var passStatus = (statusVal==="todos" || cre.status===statusVal);
+          var passTab = (cre.reviewStatus===tabVal);
+          cardEl.style.display = (passStatus && passTab) ? "" : "none";
         });
+      }
+      applyGalleryFilters();
+      statusFilterSel.addEventListener("change", applyGalleryFilters);
+
+      reviewTabsBlock.querySelectorAll(".review-tab-btn").forEach(function(btn){
+        btn.addEventListener("click", function(){
+          reviewTabByApp[app.id] = btn.dataset.tab;
+          reviewTabsBlock.querySelectorAll(".review-tab-btn").forEach(function(b){ b.classList.toggle("active", b===btn); });
+          selection.clear();
+          gallery.querySelectorAll(".card-select").forEach(function(cb){ cb.checked = false; });
+          gallery.querySelectorAll(".card").forEach(function(c){ c.classList.remove("selected"); });
+          updateBulkBar();
+          applyGalleryFilters();
+        });
+      });
+
+      galleryBlock.querySelector("#selectAllBtn").addEventListener("click", function(){
+        Array.from(gallery.children).forEach(function(cardEl, i){
+          if(cardEl.style.display==="none") return;
+          var cre = app.creatives[i];
+          selection.add(cre.id);
+          var cb = cardEl.querySelector(".card-select");
+          if(cb) cb.checked = true;
+          cardEl.classList.add("selected");
+        });
+        updateBulkBar();
+      });
+      galleryBlock.querySelector("#clearSelBtn").addEventListener("click", function(){
+        selection.clear();
+        gallery.querySelectorAll(".card-select").forEach(function(cb){ cb.checked = false; });
+        gallery.querySelectorAll(".card").forEach(function(c){ c.classList.remove("selected"); });
+        updateBulkBar();
+      });
+      galleryBlock.querySelector("#bulkApproveBtn").addEventListener("click", function(){
+        if(!selection.size) return;
+        app.creatives.forEach(function(c){ if(selection.has(c.id)) c.reviewStatus = "utilizado"; });
+        selection.clear();
+        save(); renderPanels();
+      });
+      galleryBlock.querySelector("#bulkRejectBtn").addEventListener("click", function(){
+        if(!selection.size) return;
+        app.creatives.forEach(function(c){ if(selection.has(c.id)) c.reviewStatus = "rejeitado"; });
+        selection.clear();
+        save(); renderPanels();
       });
 
       var rmPausadosBtn = galleryBlock.querySelector("#rmPausadosBtn");
@@ -3121,6 +5027,15 @@
         }).then(function(){ batchBtn.disabled = false; batchBtn.textContent = orig; });
       });
 
+      var batchSquareBtn = galleryBlock.querySelector("#batchDlSquareBtn");
+      batchSquareBtn.addEventListener("click", function(){
+        var orig = batchSquareBtn.textContent;
+        batchSquareBtn.disabled = true; batchSquareBtn.textContent = "Preparando...";
+        downloadBatchZipSquare(app).catch(function(err){
+          console.error(err); alert("Erro ao preparar os criativos. Tente novamente.");
+        }).then(function(){ batchSquareBtn.disabled = false; batchSquareBtn.textContent = orig; });
+      });
+
       var batchVideoBtn = galleryBlock.querySelector("#batchVideoBtn");
       batchVideoBtn.addEventListener("click", function(){ openBatchVideoModal(app); });
 
@@ -3131,6 +5046,18 @@
         downloadVideosZip(app).catch(function(err){
           console.error(err); alert("Erro ao preparar os vídeos. Tente novamente.");
         }).then(function(){ batchDlVideosBtn.disabled = false; batchDlVideosBtn.textContent = orig; });
+      });
+
+      var batchGifBtn = galleryBlock.querySelector("#batchGifBtn");
+      batchGifBtn.addEventListener("click", function(){ openBatchGifModal(app); });
+
+      var batchDlGifsBtn = galleryBlock.querySelector("#batchDlGifsBtn");
+      batchDlGifsBtn.addEventListener("click", function(){
+        var orig = batchDlGifsBtn.textContent;
+        batchDlGifsBtn.disabled = true; batchDlGifsBtn.textContent = "Preparando...";
+        downloadGifsZip(app).catch(function(err){
+          console.error(err); alert("Erro ao preparar os GIFs. Tente novamente.");
+        }).then(function(){ batchDlGifsBtn.disabled = false; batchDlGifsBtn.textContent = orig; });
       });
     }
     panel.appendChild(galleryBlock);
@@ -3144,6 +5071,8 @@
         '<span class="block-sub">importe uma imagem já pronta (de fora da ferramenta) pra gerar vídeo direto dela, sem passar pelos formatos daqui</span>' +
         (app.externalCreatives.length>0 ? '<button type="button" class="btn-sm" id="extBatchVideoBtn">🎬 Gerar vídeos do lote</button>' : '') +
         (app.externalCreatives.length>0 ? '<button type="button" class="btn-sm" id="extBatchDlVideosBtn">Baixar vídeos (.zip)</button>' : '') +
+        (app.externalCreatives.length>0 ? '<button type="button" class="btn-sm" id="extBatchGifBtn">🖼️ Gerar GIFs do lote</button>' : '') +
+        (app.externalCreatives.length>0 ? '<button type="button" class="btn-sm" id="extBatchDlGifsBtn">Baixar GIFs (.zip)</button>' : '') +
       '</div></div>' +
       '<input type="file" id="extImportInput" accept="image/*" multiple />' +
       '<div class="external-gallery" id="externalGallery"></div>';
@@ -3159,6 +5088,18 @@
         downloadVideosZipExternal(app).catch(function(err){
           console.error(err); alert("Erro ao preparar os vídeos. Tente novamente.");
         }).then(function(){ extBatchDlVideosBtn.disabled = false; extBatchDlVideosBtn.textContent = orig; });
+      });
+    }
+    var extBatchGifBtn = externalBlock.querySelector("#extBatchGifBtn");
+    if(extBatchGifBtn) extBatchGifBtn.addEventListener("click", function(){ openBatchGifModalExternal(app); });
+    var extBatchDlGifsBtn = externalBlock.querySelector("#extBatchDlGifsBtn");
+    if(extBatchDlGifsBtn){
+      extBatchDlGifsBtn.addEventListener("click", function(){
+        var orig = extBatchDlGifsBtn.textContent;
+        extBatchDlGifsBtn.disabled = true; extBatchDlGifsBtn.textContent = "Preparando...";
+        downloadGifsZipExternal(app).catch(function(err){
+          console.error(err); alert("Erro ao preparar os GIFs. Tente novamente.");
+        }).then(function(){ extBatchDlGifsBtn.disabled = false; extBatchDlGifsBtn.textContent = orig; });
       });
     }
 
@@ -3177,11 +5118,15 @@
           '<div class="ext-name">'+xmlEscape(ext.name)+'</div>' +
           '<div class="ext-actions">' +
             '<button type="button" class="btn-sm btn-ext-video">🎬 Criar vídeo</button>' +
+            '<button type="button" class="btn-sm btn-ext-gif">🖼️ Gerar GIF</button>' +
             '<button type="button" class="btn-ghost btn-ext-rm" aria-label="Remover criativo externo">✕</button>' +
           '</div>';
         galleryEl.appendChild(item);
         item.querySelector(".btn-ext-video").addEventListener("click", function(){
           openVideoModal(app, { id: ext.id, hook: ext.name }, ext.imageDataUrl);
+        });
+        item.querySelector(".btn-ext-gif").addEventListener("click", function(){
+          openGifModal(app, { id: ext.id, hook: ext.name }, ext.imageDataUrl);
         });
         item.querySelector(".btn-ext-rm").addEventListener("click", function(){
           app.externalCreatives = app.externalCreatives.filter(function(e){ return e.id!==ext.id; });
@@ -3206,13 +5151,52 @@
     return panel;
   }
 
-  function buildCard(app, cre){
+  function buildCard(app, cre, onSelectionChange){
+    onSelectionChange = onSelectionChange || function(){};
+    var selection = getGallerySelection(app.id);
     var card = document.createElement("div");
-    card.className = "card";
+    card.className = "card" + (selection.has(cre.id) ? " selected" : "");
+
+    var selectCb = document.createElement("input");
+    selectCb.type = "checkbox";
+    selectCb.className = "card-select";
+    selectCb.checked = selection.has(cre.id);
+    selectCb.addEventListener("change", function(){
+      if(selectCb.checked) selection.add(cre.id); else selection.delete(cre.id);
+      card.classList.toggle("selected", selectCb.checked);
+      onSelectionChange();
+    });
+    card.appendChild(selectCb);
+
+    var reviewBadge = document.createElement("span");
+    reviewBadge.className = "card-review-badge rb-"+cre.reviewStatus;
+    reviewBadge.textContent = reviewStatusLabel(cre.reviewStatus);
+    card.appendChild(reviewBadge);
+
     var posterWrap = document.createElement("div");
     posterWrap.className = "card-poster";
     posterWrap.innerHTML = buildPosterSVG(app, cre);
     card.appendChild(posterWrap);
+
+    var reviewRow = document.createElement("div");
+    reviewRow.className = "review-row";
+    if(cre.reviewStatus==="ativo"){
+      reviewRow.innerHTML =
+        '<button type="button" class="btn-rev-reject">✗ Rejeitar</button>' +
+        '<button type="button" class="btn-rev-approve">✓ Aprovar</button>';
+      reviewRow.querySelector(".btn-rev-reject").addEventListener("click", function(){
+        cre.reviewStatus = "rejeitado"; save(); renderPanels();
+      });
+      reviewRow.querySelector(".btn-rev-approve").addEventListener("click", function(){
+        cre.reviewStatus = "utilizado"; save(); renderPanels();
+      });
+    } else {
+      reviewRow.innerHTML = '<button type="button" class="btn-rev-undo">↩ Devolver para Ativos</button>';
+      reviewRow.querySelector(".btn-rev-undo").addEventListener("click", function(){
+        cre.reviewStatus = "ativo"; save(); renderPanels();
+      });
+    }
+    card.appendChild(reviewRow);
 
     var statusRow = document.createElement("div");
     statusRow.className = "status-row";
@@ -3254,16 +5238,22 @@
 
     var videoRow = document.createElement("div");
     videoRow.className = "video-row";
-    videoRow.innerHTML = '<button type="button" class="btn-sm btn-video">🎬 Criar vídeo (até 15s, com narração)</button>';
+    videoRow.innerHTML =
+      '<button type="button" class="btn-sm btn-video">🎬 Criar vídeo (até 60s, com narração)</button>' +
+      '<button type="button" class="btn-sm btn-gif" style="margin-top:5px">🖼️ Gerar GIF animado (sem áudio)</button>';
     card.appendChild(videoRow);
     videoRow.querySelector(".btn-video").addEventListener("click", function(){
       openVideoModal(app, cre);
+    });
+    videoRow.querySelector(".btn-gif").addEventListener("click", function(){
+      openGifModal(app, cre);
     });
 
     var foot = document.createElement("div");
     foot.className = "card-foot";
     foot.innerHTML =
-      '<button type="button" class="btn-dl">Baixar</button>' +
+      '<button type="button" class="btn-dl">Baixar Story</button>' +
+      '<button type="button" class="btn-dl-square">📐 Baixar Quadrado (1:1)</button>' +
       '<button type="button" class="btn-dup">Duplicar (nova cor)</button>' +
       '<button type="button" class="btn-edit">Editar</button>' +
       '<button type="button" class="btn-ghost btn-rm" aria-label="Remover criativo">✕</button>';
@@ -3302,6 +5292,11 @@
     foot.querySelector(".btn-dl").addEventListener("click", function(){
       var idx0 = app.creatives.indexOf(cre)+1;
       downloadPng(buildPosterSVG(app, cre), creativeFilename(app, cre, idx0));
+    });
+    foot.querySelector(".btn-dl-square").addEventListener("click", function(){
+      var idx0 = app.creatives.indexOf(cre)+1;
+      var name = creativeFilename(app, cre, idx0).replace(/\.png$/, "_quadrado.png");
+      downloadPng(buildFeedSquareSVG(app, cre), name, FEED_SQUARE_H, FEED_SQUARE_H);
     });
     foot.querySelector(".btn-dup").addEventListener("click", function(){
       if(app.creatives.length>=MAX_CREATIVES) return;
@@ -3376,26 +5371,6 @@
     return card;
   }
 
-  // ---- add app ----
-  var addToggle = document.getElementById("addAppToggle");
-  var addForm = document.getElementById("addAppForm");
-  var addInput = document.getElementById("newAppName");
-  addToggle.addEventListener("click", function(){ addForm.classList.add("open"); addToggle.style.display="none"; addInput.focus(); });
-  document.getElementById("addAppCancel").addEventListener("click", function(){ addForm.classList.remove("open"); addToggle.style.display=""; addInput.value=""; });
-  document.getElementById("addAppConfirm").addEventListener("click", confirmAddApp);
-  addInput.addEventListener("keydown", function(e){ if(e.key==="Enter") confirmAddApp(); });
-
-  function confirmAddApp(){
-    var name = addInput.value.trim();
-    if(!name) return;
-    var id = uid("app");
-    state.apps.push({ id:id, name:name, settings:{ store:"Google Play" }, draft: defaultDraft("R$ 3.000"), photoLibrary: [], externalCreatives: [], creatives: [] });
-    state.activeId = id;
-    save();
-    addInput.value=""; addForm.classList.remove("open"); addToggle.style.display="";
-    render();
-  }
-
   // ---- export / import data ----
   function showJsonDownloadModal(blob, filename){
     var url = URL.createObjectURL(blob);
@@ -3418,15 +5393,15 @@
     document.addEventListener("keydown", onKey);
   }
 
-  document.getElementById("exportDataBtn").addEventListener("click", function(){
+  function triggerExportBackup(){
     var json = JSON.stringify(state, null, 2);
     var blob = new Blob([json], { type: "application/json" });
     var stamp = new Date().toISOString().slice(0,10);
     showJsonDownloadModal(blob, "fabrica-criativos-backup_"+stamp+".json");
-  });
+  }
 
   var importInput = document.getElementById("importDataInput");
-  document.getElementById("importDataBtn").addEventListener("click", function(){ importInput.click(); });
+  function triggerImportBackup(){ importInput.click(); }
   importInput.addEventListener("change", function(e){
     var file = e.target.files && e.target.files[0];
     if(!file) return;
@@ -3456,12 +5431,9 @@
   // ---- theme ----
   var THEME_KEY = "creative-factory-theme";
   var themeBtn = document.getElementById("themeToggle");
-  var themeIcon = document.getElementById("themeToggleIcon");
-  var themeLabel = document.getElementById("themeToggleLabel");
   function applyTheme(theme){
     document.body.dataset.theme = theme;
-    themeIcon.textContent = theme === "light" ? "☀" : "☾";
-    themeLabel.textContent = theme === "light" ? "Modo claro" : "Modo escuro";
+    themeBtn.textContent = theme === "light" ? "☀" : "☾";
     try{ localStorage.setItem(THEME_KEY, theme); }catch(e){}
   }
   var savedTheme = "dark";
@@ -3469,6 +5441,24 @@
   applyTheme(savedTheme);
   themeBtn.addEventListener("click", function(){
     applyTheme(document.body.dataset.theme === "light" ? "dark" : "light");
+  });
+
+  document.getElementById("notifBtn").addEventListener("click", function(){
+    alert("Nenhuma notificação por enquanto.");
+  });
+  document.getElementById("railLogoutBtn").addEventListener("click", function(){
+    alert("Login/logout ainda não está conectado — essa é uma versão local, sem conta.");
+  });
+  document.getElementById("railUserName").textContent = "Minha conta";
+
+  document.getElementById("projectSelectBtn").addEventListener("click", function(){
+    var dd = document.getElementById("projectDropdown");
+    dd.style.display = dd.style.display==="none" ? "block" : "none";
+  });
+  document.addEventListener("click", function(e){
+    var wrap = document.querySelector(".rail-project-select");
+    var dd = document.getElementById("projectDropdown");
+    if(wrap && !wrap.contains(e.target)) dd.style.display = "none";
   });
 
   render();
