@@ -179,8 +179,18 @@
 
   .lib-row{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
   .external-gallery{ display:flex; gap:14px; flex-wrap:wrap; margin-top:12px; }
-  .ext-item{ width:150px; background:var(--surface-2); border-radius:10px; padding:8px; }
-  .ext-item img{ width:100%; aspect-ratio:9/16; object-fit:cover; border-radius:6px; display:block; }
+  .ext-item{ width:190px; background:var(--surface-2); border-radius:10px; padding:8px; }
+  .ext-dual-thumbs{ display:flex; gap:5px; }
+  .ext-thumb-slot{ flex:1; min-width:0; }
+  .ext-thumb-slot img{ width:100%; object-fit:cover; border-radius:6px; display:block; background:var(--surface-3); }
+  .ext-thumb-slot[data-slot="story"] img{ aspect-ratio:9/16; }
+  .ext-thumb-slot[data-slot="feed"] img{ aspect-ratio:1/1; }
+  .ext-thumb-empty{ width:100%; display:flex; align-items:center; justify-content:center; background:var(--surface-3);
+    border-radius:6px; font-size:.62rem; color:var(--text-faint); text-align:center; padding:4px; }
+  .ext-thumb-slot[data-slot="story"] .ext-thumb-empty{ aspect-ratio:9/16; }
+  .ext-thumb-slot[data-slot="feed"] .ext-thumb-empty{ aspect-ratio:1/1; }
+  .ext-thumb-label{ display:block; font-size:.62rem; text-align:center; margin-top:3px; color:var(--text-faint); cursor:pointer; }
+  .ext-thumb-label input[type=file]{ position:absolute; width:1px; height:1px; opacity:0; overflow:hidden; }
   .ext-name{ font-size:.72rem; color:var(--muted); margin-top:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .ext-actions{ display:flex; flex-direction:column; gap:5px; margin-top:6px; }
   .ext-actions button{ font-size:.72rem; padding:5px 6px; }
@@ -838,6 +848,14 @@
           if(!a.draft.bulk) a.draft.bulk = "";
           if(!a.photoLibrary) a.photoLibrary = (a.draft && a.draft.photos) || [];
           if(!a.externalCreatives) a.externalCreatives = [];
+          a.externalCreatives.forEach(function(ext){
+            if(ext.storyImageDataUrl===undefined && ext.imageDataUrl){
+              ext.storyImageDataUrl = ext.imageDataUrl;
+              ext.feedImageDataUrl = null;
+            }
+            if(ext.storyImageDataUrl===undefined) ext.storyImageDataUrl = null;
+            if(ext.feedImageDataUrl===undefined) ext.feedImageDataUrl = null;
+          });
           if(!a.settings) a.settings = {};
           if(!a.settings.videoFormat) a.settings.videoFormat = "story";
           if(a.settings.narrationVoiceLabel==null) a.settings.narrationVoiceLabel = "";
@@ -900,6 +918,39 @@
       r.onerror = reject;
       r.readAsDataURL(file);
     });
+  }
+
+  var EXTERNAL_SLOT_PATTERNS = [
+    { re: /^(.*?)[\s_\-]+(feed|quadrado|square|1x1)$/i, slot: "feed" },
+    { re: /^(.*?)[\s_\-]+(story|stories|9x16|vertical)$/i, slot: "story" }
+  ];
+
+  function parseExternalFilename(baseName){
+    for(var i=0;i<EXTERNAL_SLOT_PATTERNS.length;i++){
+      var p = EXTERNAL_SLOT_PATTERNS[i];
+      var m = baseName.match(p.re);
+      if(m){
+        var offerName = m[1].replace(/[\s_\-]+$/, "").trim();
+        return { offerName: offerName || baseName, slot: p.slot };
+      }
+    }
+    return { offerName: baseName, slot: null };
+  }
+
+  function detectSlotByAspect(dataUrl){
+    return new Promise(function(resolve){
+      var img = new Image();
+      img.onload = function(){
+        resolve((img.width / img.height) > 0.85 ? "feed" : "story");
+      };
+      img.onerror = function(){ resolve("story"); };
+      img.src = dataUrl;
+    });
+  }
+
+  function externalImageForFormat(ext, fmt){
+    if(fmt==="square") return ext.feedImageDataUrl || ext.storyImageDataUrl;
+    return ext.storyImageDataUrl || ext.feedImageDataUrl;
   }
 
   function parseBulkLine(line, fallbackCorpo, fallbackCta){
@@ -2544,8 +2595,8 @@
     }).catch(function(){ alert("Não foi possível gerar a imagem. Tente novamente."); });
   }
 
-  function downloadExternalAsFormat(ext, W, H, suffix){
-    loadImageToCanvas(ext.imageDataUrl, W, H).then(function(canvas){
+  function downloadExternalAsFormat(ext, W, H, suffix, srcImageUrl){
+    loadImageToCanvas(srcImageUrl, W, H).then(function(canvas){
       showDownloadModal(canvas.toDataURL("image/png"), sanitizeFilename(ext.name)+suffix+".png");
     }).catch(function(){ alert("Não foi possível gerar a imagem. Tente novamente."); });
   }
@@ -3634,9 +3685,10 @@
               genBtn.textContent = "Gerando "+thisJob+"/"+total+"...";
               var ext = app.externalCreatives[i];
               var audioFile = files[i % files.length];
+              var srcImg = externalImageForFormat(ext, fmt);
               return renderPosterVideoBlob(app, { id: ext.id, hook: ext.name }, audioFile, function(t){
                 genBtn.textContent = "Gerando "+thisJob+"/"+total+"... "+Math.round(t*100)+"%";
-              }, captionText, ext.imageDataUrl, motionSeq[i], fmt).then(function(result){
+              }, captionText, srcImg, motionSeq[i], fmt).then(function(result){
                 var blob = result.videoBlob;
                 var extn = (blob.type||"").indexOf("mp4")>-1 ? ".mp4" : ".webm";
                 if(dualFormat){
@@ -3730,9 +3782,10 @@
             chain = chain.then(function(){
               genBtn.textContent = "Gerando "+thisJob+"/"+total+"...";
               var ext = app.externalCreatives[i];
+              var srcImg = externalImageForFormat(ext, fmt);
               return renderPosterGifBlob(app, { id: ext.id, hook: ext.name }, function(p){
                 genBtn.textContent = "Gerando "+thisJob+"/"+total+"... "+Math.round(p*100)+"%";
-              }, ext.imageDataUrl, motionSeq[i], fmt).then(function(result){
+              }, srcImg, motionSeq[i], fmt).then(function(result){
                 if(dualFormat){
                   var suffix = fmt==="square" ? "_quadrado" : "_story";
                   zipFiles.push({ name: sanitizeFilename((i+1)+"_"+ext.name)+suffix+".gif", data: new Uint8Array(0), _blob: result.gifBlob });
@@ -5418,7 +5471,16 @@
         var item = document.createElement("div");
         item.className = "ext-item";
         item.innerHTML =
-          '<img src="'+ext.imageDataUrl+'" alt="'+xmlEscape(ext.name)+'" />' +
+          '<div class="ext-dual-thumbs">' +
+            '<div class="ext-thumb-slot" data-slot="story">' +
+              (ext.storyImageDataUrl ? '<img src="'+ext.storyImageDataUrl+'" alt="Story" />' : '<div class="ext-thumb-empty">Sem Story</div>') +
+              '<label class="ext-thumb-label">Story<input type="file" accept="image/*" class="ext-add-story" /></label>' +
+            '</div>' +
+            '<div class="ext-thumb-slot" data-slot="feed">' +
+              (ext.feedImageDataUrl ? '<img src="'+ext.feedImageDataUrl+'" alt="Feed" />' : '<div class="ext-thumb-empty">Sem Feed</div>') +
+              '<label class="ext-thumb-label">Feed<input type="file" accept="image/*" class="ext-add-feed" /></label>' +
+            '</div>' +
+          '</div>' +
           '<div class="ext-name">'+xmlEscape(ext.name)+'</div>' +
           '<div class="ext-actions">' +
             '<button type="button" class="btn-sm btn-ext-video">🎬 Criar vídeo</button>' +
@@ -5431,16 +5493,32 @@
           '</div>';
         galleryEl.appendChild(item);
         item.querySelector(".btn-ext-video").addEventListener("click", function(){
-          openVideoModal(app, { id: ext.id, hook: ext.name }, ext.imageDataUrl);
+          var img = externalImageForFormat(ext, app.settings.videoFormat);
+          openVideoModal(app, { id: ext.id, hook: ext.name }, img);
         });
         item.querySelector(".btn-ext-gif").addEventListener("click", function(){
-          openGifModal(app, { id: ext.id, hook: ext.name }, ext.imageDataUrl);
+          var img = externalImageForFormat(ext, app.settings.videoFormat);
+          openGifModal(app, { id: ext.id, hook: ext.name }, img);
         });
         item.querySelector(".btn-ext-story").addEventListener("click", function(){
-          downloadExternalAsFormat(ext, STORY_W, STORY_H, "_story");
+          downloadExternalAsFormat(ext, STORY_W, STORY_H, "_story", ext.storyImageDataUrl || ext.feedImageDataUrl);
         });
         item.querySelector(".btn-ext-square").addEventListener("click", function(){
-          downloadExternalAsFormat(ext, FEED_SQUARE_H, FEED_SQUARE_H, "_quadrado");
+          downloadExternalAsFormat(ext, FEED_SQUARE_H, FEED_SQUARE_H, "_quadrado", ext.feedImageDataUrl || ext.storyImageDataUrl);
+        });
+        item.querySelector(".ext-add-story").addEventListener("change", function(e){
+          var file = e.target.files && e.target.files[0];
+          if(!file) return;
+          fileToDataUrl(file).then(function(url){
+            ext.storyImageDataUrl = url; save(); renderPanels();
+          });
+        });
+        item.querySelector(".ext-add-feed").addEventListener("change", function(e){
+          var file = e.target.files && e.target.files[0];
+          if(!file) return;
+          fileToDataUrl(file).then(function(url){
+            ext.feedImageDataUrl = url; save(); renderPanels();
+          });
         });
         item.querySelector(".btn-ext-rm").addEventListener("click", function(){
           app.externalCreatives = app.externalCreatives.filter(function(e){ return e.id!==ext.id; });
@@ -5453,9 +5531,26 @@
     externalBlock.querySelector("#extImportInput").addEventListener("change", function(e){
       var files = Array.from(e.target.files||[]);
       if(!files.length) return;
-      Promise.all(files.map(fileToDataUrl)).then(function(urls){
-        urls.forEach(function(url, i){
-          app.externalCreatives.push({ id: uid("ext"), name: files[i].name.replace(/\.[^.]+$/,""), imageDataUrl: url });
+      Promise.all(files.map(function(file){
+        return fileToDataUrl(file).then(function(url){
+          var baseName = file.name.replace(/\.[^.]+$/, "");
+          var parsed = parseExternalFilename(baseName);
+          if(parsed.slot) return { offerName: parsed.offerName, slot: parsed.slot, url: url };
+          return detectSlotByAspect(url).then(function(slot){
+            return { offerName: parsed.offerName, slot: slot, url: url };
+          });
+        });
+      })).then(function(results){
+        results.forEach(function(r){
+          var existing = app.externalCreatives.filter(function(ex){
+            return ex.name.toLowerCase()===r.offerName.toLowerCase();
+          })[0];
+          if(!existing){
+            existing = { id: uid("ext"), name: r.offerName, storyImageDataUrl: null, feedImageDataUrl: null };
+            app.externalCreatives.push(existing);
+          }
+          if(r.slot==="feed") existing.feedImageDataUrl = r.url;
+          else existing.storyImageDataUrl = r.url;
         });
         save();
         renderPanels();
