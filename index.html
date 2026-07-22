@@ -5017,30 +5017,34 @@
     });
 
     // ---- vídeo narrado (preferências do lote) ----
-    var narrationBlock = document.createElement("section");
-    narrationBlock.className = "block";
-    narrationBlock.innerHTML =
-      '<div class="block-head"><span class="block-title">🎙️ Vídeo narrado</span>' +
-      '<span class="block-sub">preferências do lote — se o site estiver hospedado com a chave do ElevenLabs configurada, a narração é gerada automática</span></div>' +
-      '<div class="shared-fields" style="margin-top:10px">' +
-        '<div><label>Idioma da narração</label><input value="'+xmlEscape(app.settings.locale==="es-MX" ? "Espanhol (México)" : "Português (Brasil)")+'" disabled /></div>' +
-        '<div><label>Voz (rótulo, só pra lembrar)</label><input id="narrVoiceLabel" placeholder="Ex: Feminina — calma" value="'+xmlEscape(app.settings.narrationVoiceLabel||"")+'" /></div>' +
-        '<div><label>Voice ID do ElevenLabs</label><input id="narrVoiceId" placeholder="Ex: 21m00Tcm4TlvDq8ikWAM" value="'+xmlEscape(app.settings.narrationVoiceId||"")+'" /></div>' +
-        '<div><label>Formato do vídeo/GIF</label><select id="narrFormatSel">' +
-          '<option value="story"'+(app.settings.videoFormat!=="square"?" selected":"")+'>Story (1080×1920)</option>' +
-          '<option value="square"'+(app.settings.videoFormat==="square"?" selected":"")+'>Quadrado (1080×1080)</option>' +
-        '</select></div>' +
-      '</div>';
-    panel.appendChild(narrationBlock);
-    narrationBlock.querySelector("#narrVoiceLabel").addEventListener("input", function(e){
-      app.settings.narrationVoiceLabel = e.target.value; save();
-    });
-    narrationBlock.querySelector("#narrVoiceId").addEventListener("input", function(e){
-      app.settings.narrationVoiceId = e.target.value.trim(); save();
-    });
-    narrationBlock.querySelector("#narrFormatSel").addEventListener("change", function(e){
-      app.settings.videoFormat = e.target.value; save();
-    });
+    function buildNarrationBlock(app, idSuffix){
+      idSuffix = idSuffix || "";
+      var narrationBlock = document.createElement("section");
+      narrationBlock.className = "block";
+      narrationBlock.innerHTML =
+        '<div class="block-head"><span class="block-title">🎙️ Vídeo narrado</span>' +
+        '<span class="block-sub">preferências do lote — se o site estiver hospedado com a chave do ElevenLabs configurada, a narração é gerada automática</span></div>' +
+        '<div class="shared-fields" style="margin-top:10px">' +
+          '<div><label>Idioma da narração</label><input value="'+xmlEscape(app.settings.locale==="es-MX" ? "Espanhol (México)" : "Português (Brasil)")+'" disabled /></div>' +
+          '<div><label>Voz (rótulo, só pra lembrar)</label><input id="narrVoiceLabel'+idSuffix+'" placeholder="Ex: Feminina — calma" value="'+xmlEscape(app.settings.narrationVoiceLabel||"")+'" /></div>' +
+          '<div><label>Voice ID do ElevenLabs</label><input id="narrVoiceId'+idSuffix+'" placeholder="Ex: 21m00Tcm4TlvDq8ikWAM" value="'+xmlEscape(app.settings.narrationVoiceId||"")+'" /></div>' +
+          '<div><label>Formato do vídeo/GIF</label><select id="narrFormatSel'+idSuffix+'">' +
+            '<option value="story"'+(app.settings.videoFormat!=="square"?" selected":"")+'>Story (1080×1920)</option>' +
+            '<option value="square"'+(app.settings.videoFormat==="square"?" selected":"")+'>Quadrado (1080×1080)</option>' +
+          '</select></div>' +
+        '</div>';
+      narrationBlock.querySelector("#narrVoiceLabel"+idSuffix).addEventListener("input", function(e){
+        app.settings.narrationVoiceLabel = e.target.value; save();
+      });
+      narrationBlock.querySelector("#narrVoiceId"+idSuffix).addEventListener("input", function(e){
+        app.settings.narrationVoiceId = e.target.value.trim(); save();
+      });
+      narrationBlock.querySelector("#narrFormatSel"+idSuffix).addEventListener("change", function(e){
+        app.settings.videoFormat = e.target.value; save();
+      });
+      return narrationBlock;
+    }
+    panel.appendChild(buildNarrationBlock(app, ""));
 
     // ---- gallery ----
     var galleryBlock = document.createElement("section");
@@ -5210,6 +5214,9 @@
       });
     }
     panel.appendChild(galleryBlock);
+
+    // ---- vídeo narrado, também disponível junto dos criativos externos ----
+    panel.appendChild(buildNarrationBlock(app, "Ext"));
 
     // ---- external creatives (importados de fora, só pra gerar vídeo) ----
     var externalBlock = document.createElement("section");
