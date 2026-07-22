@@ -86,9 +86,14 @@
   .rail-project-btn .chev{ color:var(--text-faint); font-weight:400; }
   .rail-project-dropdown{ position:absolute; left:0; right:0; top:100%; margin-top:6px; background:var(--surface-2);
     border:1px solid var(--border-soft); border-radius:10px; padding:6px; z-index:20; box-shadow:0 12px 28px -8px rgba(0,0,0,.5); }
-  .rail-project-dropdown-item{ display:flex; align-items:center; gap:8px; padding:8px 9px; border-radius:7px; cursor:pointer; font-size:.84rem; }
+  .rail-project-dropdown-item{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 9px; border-radius:7px; cursor:pointer; font-size:.84rem; }
   .rail-project-dropdown-item:hover{ background:var(--surface-3); }
   .rail-project-dropdown-item.active{ color:var(--accent-strong); font-weight:700; }
+  .rail-project-dropdown-name{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .rail-project-rename-btn{ flex:0 0 auto; background:none; border:none; box-shadow:none; padding:2px 4px; font-size:.8rem;
+    opacity:.55; cursor:pointer; }
+  .rail-project-rename-btn:hover{ opacity:1; }
+  .rail-project-rename-input{ width:100%; font-size:.84rem; padding:4px 6px; }
   .rail-project-dropdown-add{ margin-top:4px; padding-top:6px; border-top:1px solid var(--border-soft); }
   .rail-project-dropdown-add input{ font-size:.8rem; margin-bottom:6px; }
 
@@ -3996,7 +4001,10 @@
 
     var dropdown = document.getElementById("projectDropdown");
     dropdown.innerHTML = state.apps.map(function(app){
-      return '<div class="rail-project-dropdown-item'+(app.id===state.activeId?" active":"")+'" data-id="'+app.id+'">'+xmlEscape(app.name)+'</div>';
+      return '<div class="rail-project-dropdown-item'+(app.id===state.activeId?" active":"")+'" data-id="'+app.id+'">' +
+        '<span class="rail-project-dropdown-name">'+xmlEscape(app.name)+'</span>' +
+        '<button type="button" class="rail-project-rename-btn" data-id="'+app.id+'" title="Renomear projeto" aria-label="Renomear projeto">✏️</button>' +
+      '</div>';
     }).join("") +
       '<div class="rail-project-dropdown-add">' +
         '<input type="text" id="railNewProjectName" placeholder="Nome do novo projeto" />' +
@@ -4008,6 +4016,34 @@
         state.navView = "fabrica";
         dropdown.style.display = "none";
         save(); render();
+      });
+    });
+    dropdown.querySelectorAll(".rail-project-rename-btn").forEach(function(btn){
+      btn.addEventListener("click", function(e){
+        e.stopPropagation();
+        var appId = btn.getAttribute("data-id");
+        var targetApp = state.apps.filter(function(a){ return a.id===appId; })[0];
+        if(!targetApp) return;
+        var item = btn.closest(".rail-project-dropdown-item");
+        item.innerHTML = '<input type="text" class="rail-project-rename-input" value="'+xmlEscape(targetApp.name)+'" />';
+        var input = item.querySelector(".rail-project-rename-input");
+        input.focus(); input.select();
+        var committed = false;
+        function commit(){
+          if(committed) return;
+          committed = true;
+          var newName = input.value.trim();
+          if(newName) targetApp.name = newName;
+          save(); render();
+          var dd = document.getElementById("projectDropdown");
+          if(dd) dd.style.display = "block";
+        }
+        input.addEventListener("keydown", function(ev){
+          if(ev.key==="Enter"){ ev.preventDefault(); commit(); }
+          if(ev.key==="Escape"){ ev.preventDefault(); committed = true; render(); var dd = document.getElementById("projectDropdown"); if(dd) dd.style.display = "block"; }
+        });
+        input.addEventListener("blur", commit);
+        input.addEventListener("click", function(ev){ ev.stopPropagation(); });
       });
     });
     dropdown.querySelector("#railAddProjectBtn").addEventListener("click", function(){
