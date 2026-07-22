@@ -158,6 +158,7 @@
   #storeSel{ width:140px; }
 
   .creator{ display:grid; grid-template-columns:1fr 190px; gap:18px; margin-bottom:24px; align-items:start; }
+  .creator-left-col{ min-width:0; }
   .form-card{ background:var(--surface-2); border-radius:14px; padding:20px; border:1px solid var(--border-soft); box-shadow:var(--card-shadow); }
   .briefing-label{ font-size:.7rem; letter-spacing:1.5px; color:var(--text-faint); margin-bottom:10px; text-transform:uppercase; font-weight:700; }
   .briefing-templates{ display:flex; gap:8px; flex-wrap:wrap; margin:8px 0 4px; }
@@ -188,7 +189,7 @@
   .lib-thumb .lib-rm{ position:absolute; top:2px; right:2px; width:16px; height:16px; border-radius:50%; background:rgba(0,0,0,.6);
     color:#fff; font-size:9px; line-height:16px; text-align:center; padding:0; box-shadow:none; }
 
-  .preview-card{ position:sticky; top:28px; }
+  .preview-card{ position:sticky; top:28px; min-width:0; max-width:190px; }
   .preview-poster{ width:100%; aspect-ratio:9/16; border-radius:14px; overflow:hidden; background:#fff;
     border:1px solid var(--border-soft); box-shadow:var(--card-shadow); }
   .preview-poster svg{ width:100%; height:100%; display:block; }
@@ -4886,7 +4887,10 @@
       '</div>' +
       '<div class="compliance-warn" id="complianceWarn" style="display:none"></div>' +
       '<div class="form-actions"><button type="button" class="btn-primary gen-lote-btn" id="genBtn">Gerar lote</button><span class="hint" id="capHint"></span></div>';
-    creator.appendChild(formCard);
+    var leftCol = document.createElement("div");
+    leftCol.className = "creator-left-col";
+    creator.appendChild(leftCol);
+    leftCol.appendChild(formCard);
 
     var fObjetivo = formCard.querySelector("#fObjetivo");
     fObjetivo.addEventListener("input", function(){ draft.objetivo = fObjetivo.value; save(); });
@@ -4919,7 +4923,7 @@
       '<div class="briefing-divider">Ou gere uma foto com IA (100% grátis, sem cadastro — Pollinations.ai / Flux)</div>' +
       '<textarea id="fAiPhotoPrompt" rows="2" placeholder="Descreva a foto em inglês pra melhor resultado...">'+xmlEscape(aiPhotoDefaultPrompt)+'</textarea>' +
       '<div class="form-actions" style="margin-top:8px"><button type="button" class="btn-sm" id="fAiPhotoBtn">🎨 Gerar foto com IA</button><span class="hint" id="fAiPhotoHint"></span></div>';
-    creator.appendChild(photoLibraryBlock);
+    leftCol.appendChild(photoLibraryBlock);
 
     var previewCard = document.createElement("div");
     previewCard.className = "preview-card";
