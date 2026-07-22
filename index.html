@@ -2544,6 +2544,12 @@
     }).catch(function(){ alert("Não foi possível gerar a imagem. Tente novamente."); });
   }
 
+  function downloadExternalAsFormat(ext, W, H, suffix){
+    loadImageToCanvas(ext.imageDataUrl, W, H).then(function(canvas){
+      showDownloadModal(canvas.toDataURL("image/png"), sanitizeFilename(ext.name)+suffix+".png");
+    }).catch(function(){ alert("Não foi possível gerar a imagem. Tente novamente."); });
+  }
+
   function showDownloadModal(dataUrl, filename){
     var overlay = document.createElement("div");
     overlay.className = "dl-overlay";
@@ -2661,12 +2667,14 @@
     return { sx:sx, sy:sy, sw:sw, sh:sh };
   }
 
-  function videoCanvasDims(app){
-    return (app.settings && app.settings.videoFormat==="square") ? [FEED_SQUARE_H, FEED_SQUARE_H] : [STORY_W, STORY_H];
+  function videoCanvasDims(app, formatOverride){
+    var fmt = formatOverride || (app.settings && app.settings.videoFormat);
+    return fmt==="square" ? [FEED_SQUARE_H, FEED_SQUARE_H] : [STORY_W, STORY_H];
   }
 
-  function buildVideoBaseSVG(app, cre){
-    return (app.settings && app.settings.videoFormat==="square") ? buildFeedSquareSVG(app, cre) : buildPosterSVG(app, cre);
+  function buildVideoBaseSVG(app, cre, formatOverride){
+    var fmt = formatOverride || (app.settings && app.settings.videoFormat);
+    return fmt==="square" ? buildFeedSquareSVG(app, cre) : buildPosterSVG(app, cre);
   }
 
   function loadImageToCanvas(url, W, H){
@@ -2848,12 +2856,12 @@
     return new Uint8Array(bytes);
   }
 
-  function renderPosterGifBlob(app, cre, onProgress, externalImageUrl, forcedMotion){
+  function renderPosterGifBlob(app, cre, onProgress, externalImageUrl, forcedMotion, formatOverride){
     return new Promise(function(resolve, reject){
-      var dims = videoCanvasDims(app);
+      var dims = videoCanvasDims(app, formatOverride);
       var baseCanvasPromise = externalImageUrl
         ? loadImageToCanvas(externalImageUrl, dims[0], dims[1])
-        : renderPosterToCanvas(buildVideoBaseSVG(app, cre), dims[0], dims[1]);
+        : renderPosterToCanvas(buildVideoBaseSVG(app, cre, formatOverride), dims[0], dims[1]);
       baseCanvasPromise.then(function(staticCanvas){
         var W = staticCanvas.width, H = staticCanvas.height;
         var GIF_W = 320, GIF_H = Math.round(GIF_W * H / W);
@@ -2920,16 +2928,16 @@
     return seq;
   }
 
-  function renderPosterVideoBlob(app, cre, audioFile, onProgress, captionText, externalImageUrl, forcedMotion){
+  function renderPosterVideoBlob(app, cre, audioFile, onProgress, captionText, externalImageUrl, forcedMotion, formatOverride){
     return new Promise(function(resolve, reject){
       if(!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream){
         reject(new Error("Seu navegador não suporta gravação de vídeo (precisa de MediaRecorder + captureStream)."));
         return;
       }
-      var dims = videoCanvasDims(app);
+      var dims = videoCanvasDims(app, formatOverride);
       var baseCanvasPromise = externalImageUrl
         ? loadImageToCanvas(externalImageUrl, dims[0], dims[1])
-        : renderPosterToCanvas(buildVideoBaseSVG(app, cre), dims[0], dims[1]);
+        : renderPosterToCanvas(buildVideoBaseSVG(app, cre, formatOverride), dims[0], dims[1]);
       baseCanvasPromise.then(function(staticCanvas){
         var W = staticCanvas.width, H = staticCanvas.height;
         var outCanvas = document.createElement("canvas");
@@ -3267,6 +3275,9 @@
         '</div>' +
         '<label style="margin-top:14px">Legenda (opcional) — mesmo texto da narração, aparece estilo TikTok em todos os vídeos do lote</label>' +
         '<textarea id="batchCaptionInput" rows="3" placeholder="Cole aqui o texto que a narração fala..."></textarea>' +
+        '<label class="hint" style="display:flex;align-items:center;gap:8px;margin-top:12px;cursor:pointer">' +
+          '<input type="checkbox" id="batchDualFormat" style="width:auto" /> Gerar nos dois formatos juntos (Story + Quadrado) — baixa tudo de uma vez, sem precisar rodar o lote de novo' +
+        '</label>' +
         '<div class="dl-actions" style="margin-top:14px">' +
           '<button type="button" class="btn-primary" id="genBatchVideoBtn">Gerar vídeos</button>' +
           '<button type="button" class="dl-close">Fechar</button>' +
@@ -3285,6 +3296,7 @@
     var audioInput = overlay.querySelector("#batchAudioInput");
     var pairList = overlay.querySelector("#pairList");
     var genBtn = overlay.querySelector("#genBatchVideoBtn");
+    var dualFormatCb = overlay.querySelector("#batchDualFormat");
     var files = [];
 
     overlay.querySelectorAll("[data-mode]").forEach(function(btn){
@@ -3315,43 +3327,53 @@
       var n = app.creatives.length;
       var captionText = overlay.querySelector("#batchCaptionInput").value.trim();
       var motionSeq = shuffledMotionSequence(n);
+      var dualFormat = dualFormatCb.checked;
+      var formats = dualFormat ? ["story","square"] : [null];
+      var zipFiles = [];
       var chain = Promise.resolve();
       var done = 0;
+      var total = n*formats.length;
+      var jobN = 0;
       for(var i=0;i<n;i++){
-        (function(i){
-          chain = chain.then(function(){
-            var cre = app.creatives[i];
-            if(mode==="auto"){
-              genBtn.textContent = "Gerando narração "+(i+1)+"/"+n+"...";
-              return fetchGeneratedVoice(narrationTextFor(cre), app.settings.narrationVoiceId).then(function(audioFile){
-                genBtn.textContent = "Gerando vídeo "+(i+1)+"/"+n+"...";
+        formats.forEach(function(fmt){
+          (function(i, fmt){
+            jobN++;
+            var thisJob = jobN;
+            chain = chain.then(function(){
+              var cre = app.creatives[i];
+              var narrationBase = mode==="auto" ? fetchGeneratedVoice(narrationTextFor(cre), app.settings.narrationVoiceId) : Promise.resolve(files[i % files.length]);
+              return narrationBase.then(function(audioFile){
+                genBtn.textContent = "Gerando "+thisJob+"/"+total+"...";
+                var capText = mode==="auto" ? (captionText || narrationTextFor(cre)) : captionText;
                 return renderPosterVideoBlob(app, cre, audioFile, function(t){
-                  genBtn.textContent = "Gerando "+(i+1)+"/"+n+"... "+Math.round(t*100)+"%";
-                }, captionText || narrationTextFor(cre), undefined, motionSeq[i]);
+                  genBtn.textContent = "Gerando "+thisJob+"/"+total+"... "+Math.round(t*100)+"%";
+                }, capText, undefined, motionSeq[i], fmt);
               }).then(function(result){
                 var blob = result.videoBlob;
                 var ext = (blob.type||"").indexOf("mp4")>-1 ? ".mp4" : ".webm";
-                videoBlobsStore[cre.id] = { blob: blob, filename: creativeFilename(app, cre, i+1).replace(/\.png$/,ext), imageDataUrl: result.imageDataUrl };
-                done++;
-              }).catch(function(err){ console.error("Falha no vídeo "+(i+1), err); });
-            } else {
-              genBtn.textContent = "Gerando "+(i+1)+"/"+n+"...";
-              var audioFile = files[i % files.length];
-              return renderPosterVideoBlob(app, cre, audioFile, function(t){
-                genBtn.textContent = "Gerando "+(i+1)+"/"+n+"... "+Math.round(t*100)+"%";
-              }, captionText, undefined, motionSeq[i]).then(function(result){
-                var blob = result.videoBlob;
-                var ext = (blob.type||"").indexOf("mp4")>-1 ? ".mp4" : ".webm";
-                videoBlobsStore[cre.id] = { blob: blob, filename: creativeFilename(app, cre, i+1).replace(/\.png$/,ext), imageDataUrl: result.imageDataUrl };
-                done++;
-              }).catch(function(err){ console.error("Falha no vídeo "+(i+1), err); });
-            }
-          });
-        })(i);
+                if(dualFormat){
+                  var suffix = fmt==="square" ? "_quadrado" : "_story";
+                  return blob.arrayBuffer().then(function(buf){
+                    zipFiles.push({ name: creativeFilename(app, cre, i+1).replace(/\.png$/, suffix+ext), data: new Uint8Array(buf) });
+                    done++;
+                  });
+                } else {
+                  videoBlobsStore[cre.id] = { blob: blob, filename: creativeFilename(app, cre, i+1).replace(/\.png$/,ext), imageDataUrl: result.imageDataUrl };
+                  done++;
+                }
+              }).catch(function(err){ console.error("Falha no vídeo "+thisJob, err); });
+            });
+          })(i, fmt);
+        });
       }
       chain.then(function(){
         close();
-        showBatchVideoDoneModal(app, done, n, false);
+        if(dualFormat){
+          var zipBlob = buildZip(zipFiles);
+          showZipModal(zipBlob, sanitizeFilename(app.name)+"_videos_story_e_quadrado.zip");
+        } else {
+          showBatchVideoDoneModal(app, done, n, false);
+        }
       });
     });
   }
@@ -3432,6 +3454,9 @@
       '<div class="dl-box" style="max-width:520px">' +
         '<p style="margin-top:0">Gerar GIFs do lote ('+n+' criativo'+(n===1?"":"s")+')</p>' +
         '<p class="hint">Cada GIF sai com um movimento diferente (loop curto, ~1,8s, sem áudio) — mesma lógica dos vídeos.</p>' +
+        '<label class="hint" style="display:flex;align-items:center;gap:8px;margin-top:10px;cursor:pointer">' +
+          '<input type="checkbox" id="batchGifDualFormat" style="width:auto" /> Gerar nos dois formatos juntos (Story + Quadrado)' +
+        '</label>' +
         '<div class="dl-actions" style="margin-top:14px">' +
           '<button type="button" class="btn-primary" id="genBatchGifBtn">Gerar GIFs</button>' +
           '<button type="button" class="dl-close">Fechar</button>' +
@@ -3445,26 +3470,58 @@
     document.addEventListener("keydown", onKey);
 
     var genBtn = overlay.querySelector("#genBatchGifBtn");
+    var dualFormatCb = overlay.querySelector("#batchGifDualFormat");
     genBtn.addEventListener("click", function(){
       genBtn.disabled = true;
       var motionSeq = shuffledMotionSequence(n);
+      var dualFormat = dualFormatCb.checked;
+      var formats = dualFormat ? ["story","square"] : [null];
+      var zipFiles = [];
       var chain = Promise.resolve();
       var done = 0;
+      var total = n*formats.length;
+      var jobN = 0;
       for(var i=0;i<n;i++){
-        (function(i){
-          chain = chain.then(function(){
-            genBtn.textContent = "Gerando "+(i+1)+"/"+n+"...";
-            var cre = app.creatives[i];
-            return renderPosterGifBlob(app, cre, function(p){
-              genBtn.textContent = "Gerando "+(i+1)+"/"+n+"... "+Math.round(p*100)+"%";
-            }, undefined, motionSeq[i]).then(function(result){
-              gifBlobsStore[cre.id] = { blob: result.gifBlob, filename: creativeFilename(app, cre, i+1).replace(/\.png$/,".gif") };
-              done++;
-            }).catch(function(err){ console.error("Falha no GIF "+(i+1), err); });
-          });
-        })(i);
+        formats.forEach(function(fmt){
+          (function(i, fmt){
+            jobN++;
+            var thisJob = jobN;
+            chain = chain.then(function(){
+              genBtn.textContent = "Gerando "+thisJob+"/"+total+"...";
+              var cre = app.creatives[i];
+              return renderPosterGifBlob(app, cre, function(p){
+                genBtn.textContent = "Gerando "+thisJob+"/"+total+"... "+Math.round(p*100)+"%";
+              }, undefined, motionSeq[i], fmt).then(function(result){
+                if(dualFormat){
+                  var suffix = fmt==="square" ? "_quadrado" : "_story";
+                  zipFiles.push({ name: creativeFilename(app, cre, i+1).replace(/\.png$/, suffix+".gif"), data: new Uint8Array(0) , _blob: result.gifBlob});
+                  done++;
+                } else {
+                  gifBlobsStore[cre.id] = { blob: result.gifBlob, filename: creativeFilename(app, cre, i+1).replace(/\.png$/,".gif") };
+                  done++;
+                }
+              }).catch(function(err){ console.error("Falha no GIF "+thisJob, err); });
+            });
+          })(i, fmt);
+        });
       }
       chain.then(function(){
+        if(dualFormat){
+          var zipChain = Promise.resolve();
+          zipFiles.forEach(function(f){
+            zipChain = zipChain.then(function(){
+              return f._blob.arrayBuffer();
+            }).then(function(buf){
+              f.data = new Uint8Array(buf);
+              delete f._blob;
+            });
+          });
+          return zipChain.then(function(){
+            close();
+            var zipBlob = buildZip(zipFiles);
+            showZipModal(zipBlob, sanitizeFilename(app.name)+"_gifs_story_e_quadrado.zip");
+          });
+        }
         close();
         showBatchGifDoneModal(app, done, n, false);
       });
@@ -3525,6 +3582,9 @@
         '<div id="pairListExt" style="margin-top:12px"></div>' +
         '<label style="margin-top:14px">Legenda (opcional) — mesmo texto da narração, aparece estilo TikTok em todos os vídeos do lote</label>' +
         '<textarea id="batchCaptionInputExt" rows="3" placeholder="Cole aqui o texto que a narração fala..."></textarea>' +
+        '<label class="hint" style="display:flex;align-items:center;gap:8px;margin-top:12px;cursor:pointer">' +
+          '<input type="checkbox" id="batchDualFormatExt" style="width:auto" /> Gerar nos dois formatos juntos (Story + Quadrado) — baixa tudo de uma vez, sem precisar rodar o lote de novo' +
+        '</label>' +
         '<div class="dl-actions" style="margin-top:14px">' +
           '<button type="button" class="btn-primary" id="genBatchVideoBtnExt" disabled>⬆️ Escolha os áudios primeiro</button>' +
           '<button type="button" class="dl-close">Fechar</button>' +
@@ -3540,6 +3600,7 @@
     var audioInput = overlay.querySelector("#batchAudioInputExt");
     var pairList = overlay.querySelector("#pairListExt");
     var genBtn = overlay.querySelector("#genBatchVideoBtnExt");
+    var dualFormatCb = overlay.querySelector("#batchDualFormatExt");
     var files = [];
     audioInput.addEventListener("change", function(e){
       files = Array.from(e.target.files||[]).sort(function(a,b){ return a.name.localeCompare(b.name); });
@@ -3557,28 +3618,50 @@
       var n = app.externalCreatives.length;
       var captionText = overlay.querySelector("#batchCaptionInputExt").value.trim();
       var motionSeq = shuffledMotionSequence(n);
+      var dualFormat = dualFormatCb.checked;
+      var formats = dualFormat ? ["story","square"] : [null];
+      var zipFiles = [];
       var chain = Promise.resolve();
       var done = 0;
+      var total = n*formats.length;
+      var jobN = 0;
       for(var i=0;i<n;i++){
-        (function(i){
-          chain = chain.then(function(){
-            genBtn.textContent = "Gerando "+(i+1)+"/"+n+"...";
-            var ext = app.externalCreatives[i];
-            var audioFile = files[i % files.length];
-            return renderPosterVideoBlob(app, { id: ext.id, hook: ext.name }, audioFile, function(t){
-              genBtn.textContent = "Gerando "+(i+1)+"/"+n+"... "+Math.round(t*100)+"%";
-            }, captionText, ext.imageDataUrl, motionSeq[i]).then(function(result){
-              var blob = result.videoBlob;
-              var extn = (blob.type||"").indexOf("mp4")>-1 ? ".mp4" : ".webm";
-              videoBlobsStore[ext.id] = { blob: blob, filename: sanitizeFilename((i+1)+"_"+ext.name)+extn, imageDataUrl: result.imageDataUrl };
-              done++;
-            }).catch(function(err){ console.error("Falha no vídeo "+(i+1), err); });
-          });
-        })(i);
+        formats.forEach(function(fmt){
+          (function(i, fmt){
+            jobN++;
+            var thisJob = jobN;
+            chain = chain.then(function(){
+              genBtn.textContent = "Gerando "+thisJob+"/"+total+"...";
+              var ext = app.externalCreatives[i];
+              var audioFile = files[i % files.length];
+              return renderPosterVideoBlob(app, { id: ext.id, hook: ext.name }, audioFile, function(t){
+                genBtn.textContent = "Gerando "+thisJob+"/"+total+"... "+Math.round(t*100)+"%";
+              }, captionText, ext.imageDataUrl, motionSeq[i], fmt).then(function(result){
+                var blob = result.videoBlob;
+                var extn = (blob.type||"").indexOf("mp4")>-1 ? ".mp4" : ".webm";
+                if(dualFormat){
+                  var suffix = fmt==="square" ? "_quadrado" : "_story";
+                  return blob.arrayBuffer().then(function(buf){
+                    zipFiles.push({ name: sanitizeFilename((i+1)+"_"+ext.name)+suffix+extn, data: new Uint8Array(buf) });
+                    done++;
+                  });
+                } else {
+                  videoBlobsStore[ext.id] = { blob: blob, filename: sanitizeFilename((i+1)+"_"+ext.name)+extn, imageDataUrl: result.imageDataUrl };
+                  done++;
+                }
+              }).catch(function(err){ console.error("Falha no vídeo "+thisJob, err); });
+            });
+          })(i, fmt);
+        });
       }
       chain.then(function(){
         close();
-        showBatchVideoDoneModal(app, done, n, true);
+        if(dualFormat){
+          var zipBlob = buildZip(zipFiles);
+          showZipModal(zipBlob, sanitizeFilename(app.name)+"_externos_videos_story_e_quadrado.zip");
+        } else {
+          showBatchVideoDoneModal(app, done, n, true);
+        }
       });
     });
   }
@@ -3612,6 +3695,9 @@
       '<div class="dl-box" style="max-width:520px">' +
         '<p style="margin-top:0">Gerar GIFs do lote — criativos externos ('+n+' criativo'+(n===1?"":"s")+')</p>' +
         '<p class="hint">Cada GIF sai com um movimento diferente (loop curto, ~1,8s, sem áudio) — mesma lógica dos vídeos.</p>' +
+        '<label class="hint" style="display:flex;align-items:center;gap:8px;margin-top:10px;cursor:pointer">' +
+          '<input type="checkbox" id="batchGifDualFormatExt" style="width:auto" /> Gerar nos dois formatos juntos (Story + Quadrado)' +
+        '</label>' +
         '<div class="dl-actions" style="margin-top:14px">' +
           '<button type="button" class="btn-primary" id="genBatchGifBtnExt">Gerar GIFs</button>' +
           '<button type="button" class="dl-close">Fechar</button>' +
@@ -3625,26 +3711,58 @@
     document.addEventListener("keydown", onKey);
 
     var genBtn = overlay.querySelector("#genBatchGifBtnExt");
+    var dualFormatCb = overlay.querySelector("#batchGifDualFormatExt");
     genBtn.addEventListener("click", function(){
       genBtn.disabled = true;
       var motionSeq = shuffledMotionSequence(n);
+      var dualFormat = dualFormatCb.checked;
+      var formats = dualFormat ? ["story","square"] : [null];
+      var zipFiles = [];
       var chain = Promise.resolve();
       var done = 0;
+      var total = n*formats.length;
+      var jobN = 0;
       for(var i=0;i<n;i++){
-        (function(i){
-          chain = chain.then(function(){
-            genBtn.textContent = "Gerando "+(i+1)+"/"+n+"...";
-            var ext = app.externalCreatives[i];
-            return renderPosterGifBlob(app, { id: ext.id, hook: ext.name }, function(p){
-              genBtn.textContent = "Gerando "+(i+1)+"/"+n+"... "+Math.round(p*100)+"%";
-            }, ext.imageDataUrl, motionSeq[i]).then(function(result){
-              gifBlobsStore[ext.id] = { blob: result.gifBlob, filename: sanitizeFilename((i+1)+"_"+ext.name)+".gif" };
-              done++;
-            }).catch(function(err){ console.error("Falha no GIF "+(i+1), err); });
-          });
-        })(i);
+        formats.forEach(function(fmt){
+          (function(i, fmt){
+            jobN++;
+            var thisJob = jobN;
+            chain = chain.then(function(){
+              genBtn.textContent = "Gerando "+thisJob+"/"+total+"...";
+              var ext = app.externalCreatives[i];
+              return renderPosterGifBlob(app, { id: ext.id, hook: ext.name }, function(p){
+                genBtn.textContent = "Gerando "+thisJob+"/"+total+"... "+Math.round(p*100)+"%";
+              }, ext.imageDataUrl, motionSeq[i], fmt).then(function(result){
+                if(dualFormat){
+                  var suffix = fmt==="square" ? "_quadrado" : "_story";
+                  zipFiles.push({ name: sanitizeFilename((i+1)+"_"+ext.name)+suffix+".gif", data: new Uint8Array(0), _blob: result.gifBlob });
+                  done++;
+                } else {
+                  gifBlobsStore[ext.id] = { blob: result.gifBlob, filename: sanitizeFilename((i+1)+"_"+ext.name)+".gif" };
+                  done++;
+                }
+              }).catch(function(err){ console.error("Falha no GIF "+thisJob, err); });
+            });
+          })(i, fmt);
+        });
       }
       chain.then(function(){
+        if(dualFormat){
+          var zipChain = Promise.resolve();
+          zipFiles.forEach(function(f){
+            zipChain = zipChain.then(function(){
+              return f._blob.arrayBuffer();
+            }).then(function(buf){
+              f.data = new Uint8Array(buf);
+              delete f._blob;
+            });
+          });
+          return zipChain.then(function(){
+            close();
+            var zipBlob = buildZip(zipFiles);
+            showZipModal(zipBlob, sanitizeFilename(app.name)+"_externos_gifs_story_e_quadrado.zip");
+          });
+        }
         close();
         showBatchGifDoneModal(app, done, n, true);
       });
@@ -5305,6 +5423,10 @@
           '<div class="ext-actions">' +
             '<button type="button" class="btn-sm btn-ext-video">🎬 Criar vídeo</button>' +
             '<button type="button" class="btn-sm btn-ext-gif">🖼️ Gerar GIF</button>' +
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">' +
+              '<button type="button" class="btn-sm btn-ext-story" title="Baixar Story (1080×1920)">⬇ Story</button>' +
+              '<button type="button" class="btn-sm btn-ext-square" title="Baixar Quadrado (1080×1080)">⬇ Quadrado</button>' +
+            '</div>' +
             '<button type="button" class="btn-ghost btn-ext-rm" aria-label="Remover criativo externo">✕</button>' +
           '</div>';
         galleryEl.appendChild(item);
@@ -5313,6 +5435,12 @@
         });
         item.querySelector(".btn-ext-gif").addEventListener("click", function(){
           openGifModal(app, { id: ext.id, hook: ext.name }, ext.imageDataUrl);
+        });
+        item.querySelector(".btn-ext-story").addEventListener("click", function(){
+          downloadExternalAsFormat(ext, STORY_W, STORY_H, "_story");
+        });
+        item.querySelector(".btn-ext-square").addEventListener("click", function(){
+          downloadExternalAsFormat(ext, FEED_SQUARE_H, FEED_SQUARE_H, "_quadrado");
         });
         item.querySelector(".btn-ext-rm").addEventListener("click", function(){
           app.externalCreatives = app.externalCreatives.filter(function(e){ return e.id!==ext.id; });
