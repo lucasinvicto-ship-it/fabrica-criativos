@@ -157,7 +157,7 @@
   .settings-field label{ margin:0; }
   #storeSel{ width:140px; }
 
-  .creator{ display:grid; grid-template-columns:1fr 300px; gap:18px; margin-bottom:24px; align-items:start; }
+  .creator{ display:grid; grid-template-columns:1fr 190px; gap:18px; margin-bottom:24px; align-items:start; }
   .form-card{ background:var(--surface-2); border-radius:14px; padding:20px; border:1px solid var(--border-soft); box-shadow:var(--card-shadow); }
   .briefing-label{ font-size:.7rem; letter-spacing:1.5px; color:var(--text-faint); margin-bottom:10px; text-transform:uppercase; font-weight:700; }
   .briefing-templates{ display:flex; gap:8px; flex-wrap:wrap; margin:8px 0 4px; }
@@ -269,11 +269,15 @@
   .gallery{ display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:16px; }
   .card{ background:var(--surface-2); border-radius:12px; overflow:hidden; border:1px solid var(--border-soft); box-shadow:var(--card-shadow); position:relative; }
   .card.selected{ box-shadow:0 0 0 2px var(--accent-strong), var(--card-shadow); }
-  .card-select{ position:absolute; top:8px; left:8px; z-index:2; width:20px; height:20px; cursor:pointer; accent-color:var(--accent-strong); }
-  .card-review-badge{ position:absolute; top:8px; right:8px; z-index:2; font-size:.68rem; font-weight:700; padding:3px 8px; border-radius:999px; }
-  .card-review-badge.rb-ativo{ background:rgba(127,147,172,.85); color:#fff; }
-  .card-review-badge.rb-rejeitado{ background:rgba(194,105,90,.9); color:#fff; }
-  .card-review-badge.rb-utilizado{ background:rgba(123,168,137,.9); color:#fff; }
+  .card-select-wrap{ position:absolute; top:10px; left:10px; z-index:2; width:26px; height:26px; border-radius:8px;
+    background:rgba(255,255,255,.94); box-shadow:0 1px 5px rgba(0,0,0,.3); display:flex; align-items:center; justify-content:center; }
+  .card-select{ width:16px; height:16px; margin:0; cursor:pointer; accent-color:var(--accent-strong); }
+  .card-review-badge{ position:absolute; top:10px; right:10px; z-index:2; font-size:.66rem; font-weight:700; padding:4px 10px;
+    border-radius:999px; letter-spacing:.2px; backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+    box-shadow:0 1px 5px rgba(0,0,0,.3); }
+  .card-review-badge.rb-ativo{ background:rgba(90,105,125,.72); color:#fff; }
+  .card-review-badge.rb-rejeitado{ background:rgba(178,90,76,.78); color:#fff; }
+  .card-review-badge.rb-utilizado{ background:rgba(96,148,112,.78); color:#fff; }
   .review-row{ display:flex; gap:5px; padding:6px 8px 0; }
   .review-row button{ flex:1; font-size:.72rem; padding:6px 4px; border-radius:6px; font-weight:700; }
   .review-row .btn-rev-reject{ background:rgba(194,105,90,.14); color:#c26b5a; border:1px solid rgba(194,105,90,.28); }
@@ -285,8 +289,8 @@
   .copy-row{ display:flex; gap:5px; padding:6px 8px 0; }
   .copy-row .copy-target{ flex:1; font-size:.74rem; padding:5px 6px; }
   .copy-row .btn-copy-app{ flex:0 0 auto; font-size:.72rem; padding:5px 8px; white-space:nowrap; }
-  .video-row{ padding:6px 8px 0; display:flex; flex-direction:column; }
-  .video-row .btn-video, .video-row .btn-gif{ width:100%; font-size:.74rem; padding:7px 6px; }
+  .video-row{ padding:6px 8px 0; display:grid; grid-template-columns:1fr 1fr; gap:5px; }
+  .video-row .btn-video, .video-row .btn-gif{ width:100%; font-size:.72rem; padding:7px 4px; }
   .dl-box label{ display:block; margin-top:4px; }
   .dl-box input[type=file]{ margin-top:6px; width:100%; }
   .status-row select.status-select{ font-size:.76rem; font-weight:700; padding:5px 8px; text-align:center;
@@ -294,8 +298,10 @@
   .status-select.st-testando{ background:rgba(127,147,172,.16); color:#93a6bd; }
   .status-select.st-venceu{ background:rgba(123,168,137,.18); color:#8fc4a2; }
   .status-select.st-pausado{ background:rgba(194,105,90,.16); color:#dd9a8d; }
-  .card-foot{ display:flex; gap:5px; padding:8px; flex-wrap:wrap; }
-  .card-foot button{ flex:1; min-width:56px; font-size:.74rem; padding:6px 6px; }
+  .card-foot{ display:grid; grid-template-columns:1fr 1fr; gap:5px; padding:8px; }
+  .card-foot button{ font-size:.74rem; padding:6px 6px; }
+  .card-foot .row-span2{ grid-column:1/-1; display:grid; grid-template-columns:1fr 1fr auto; gap:5px; }
+  .card-foot .row-span2 .btn-rm{ padding:6px 10px; }
 
   .edit-panel{ display:none; padding:12px; border-top:1px solid var(--border-soft); }
   .edit-panel.open{ display:flex; flex-direction:column; gap:10px; }
@@ -403,6 +409,19 @@
     "nubank","picpay","mercado pago","banco do brasil","itau","bradesco","santander","c6 bank","inter","will bank","pagbank",
     "banco del bienestar","beca benito juarez","bbva","banorte","banco azteca","banjercito","banamex","citibanamex"
   ];
+  var NARRATION_LANGUAGES = [
+    { code:"pt-BR", label:"Português (Brasil)" },
+    { code:"pt-PT", label:"Português (Portugal)" },
+    { code:"es-MX", label:"Español (México)" },
+    { code:"es-ES", label:"Español (España)" },
+    { code:"es-419", label:"Español (Latinoamérica)" },
+    { code:"en-US", label:"English (US)" },
+    { code:"en-GB", label:"English (UK)" },
+    { code:"fr-FR", label:"Français" },
+    { code:"it-IT", label:"Italiano" },
+    { code:"de-DE", label:"Deutsch" }
+  ];
+
   var I18N = {
     "pt-BR": {
       storeLabel: "DISPONÍVEL NO",
@@ -822,6 +841,7 @@
           if(!a.settings.videoFormat) a.settings.videoFormat = "story";
           if(a.settings.narrationVoiceLabel==null) a.settings.narrationVoiceLabel = "";
           if(a.settings.narrationVoiceId==null) a.settings.narrationVoiceId = "";
+          if(a.settings.narrationLanguage==null) a.settings.narrationLanguage = (a.settings.locale==="es-MX" ? "es-MX" : "pt-BR");
           a.creatives.forEach(function(c,i){
             if(!c.color) c.color = PALETTE[i % PALETTE.length];
             if(c.photoZoom==null) c.photoZoom = 100;
@@ -5021,11 +5041,14 @@
       idSuffix = idSuffix || "";
       var narrationBlock = document.createElement("section");
       narrationBlock.className = "block";
+      var curLang = app.settings.narrationLanguage || (app.settings.locale==="es-MX" ? "es-MX" : "pt-BR");
       narrationBlock.innerHTML =
         '<div class="block-head"><span class="block-title">🎙️ Vídeo narrado</span>' +
         '<span class="block-sub">preferências do lote — se o site estiver hospedado com a chave do ElevenLabs configurada, a narração é gerada automática</span></div>' +
         '<div class="shared-fields" style="margin-top:10px">' +
-          '<div><label>Idioma da narração</label><input value="'+xmlEscape(app.settings.locale==="es-MX" ? "Espanhol (México)" : "Português (Brasil)")+'" disabled /></div>' +
+          '<div><label>Idioma da narração</label><select id="narrLangSel'+idSuffix+'">' +
+            NARRATION_LANGUAGES.map(function(l){ return '<option value="'+l.code+'"'+(curLang===l.code?" selected":"")+'>'+xmlEscape(l.label)+'</option>'; }).join("") +
+          '</select></div>' +
           '<div><label>Voz (rótulo, só pra lembrar)</label><input id="narrVoiceLabel'+idSuffix+'" placeholder="Ex: Feminina — calma" value="'+xmlEscape(app.settings.narrationVoiceLabel||"")+'" /></div>' +
           '<div><label>Voice ID do ElevenLabs</label><input id="narrVoiceId'+idSuffix+'" placeholder="Ex: 21m00Tcm4TlvDq8ikWAM" value="'+xmlEscape(app.settings.narrationVoiceId||"")+'" /></div>' +
           '<div><label>Formato do vídeo/GIF</label><select id="narrFormatSel'+idSuffix+'">' +
@@ -5033,6 +5056,9 @@
             '<option value="square"'+(app.settings.videoFormat==="square"?" selected":"")+'>Quadrado (1080×1080)</option>' +
           '</select></div>' +
         '</div>';
+      narrationBlock.querySelector("#narrLangSel"+idSuffix).addEventListener("change", function(e){
+        app.settings.narrationLanguage = e.target.value; save();
+      });
       narrationBlock.querySelector("#narrVoiceLabel"+idSuffix).addEventListener("input", function(e){
         app.settings.narrationVoiceLabel = e.target.value; save();
       });
@@ -5313,6 +5339,8 @@
     var card = document.createElement("div");
     card.className = "card" + (selection.has(cre.id) ? " selected" : "");
 
+    var selectWrap = document.createElement("div");
+    selectWrap.className = "card-select-wrap";
     var selectCb = document.createElement("input");
     selectCb.type = "checkbox";
     selectCb.className = "card-select";
@@ -5322,7 +5350,8 @@
       card.classList.toggle("selected", selectCb.checked);
       onSelectionChange();
     });
-    card.appendChild(selectCb);
+    selectWrap.appendChild(selectCb);
+    card.appendChild(selectWrap);
 
     var reviewBadge = document.createElement("span");
     reviewBadge.className = "card-review-badge rb-"+cre.reviewStatus;
@@ -5395,8 +5424,8 @@
     var videoRow = document.createElement("div");
     videoRow.className = "video-row";
     videoRow.innerHTML =
-      '<button type="button" class="btn-sm btn-video">🎬 Criar vídeo (até 60s, com narração)</button>' +
-      '<button type="button" class="btn-sm btn-gif" style="margin-top:5px">🖼️ Gerar GIF animado (sem áudio)</button>';
+      '<button type="button" class="btn-sm btn-video" title="Criar vídeo (até 60s, com narração)">🎬 Vídeo</button>' +
+      '<button type="button" class="btn-sm btn-gif" title="Gerar GIF animado (sem áudio)">🖼️ GIF</button>';
     card.appendChild(videoRow);
     videoRow.querySelector(".btn-video").addEventListener("click", function(){
       openVideoModal(app, cre);
@@ -5408,11 +5437,13 @@
     var foot = document.createElement("div");
     foot.className = "card-foot";
     foot.innerHTML =
-      '<button type="button" class="btn-dl">Baixar Story</button>' +
-      '<button type="button" class="btn-dl-square">📐 Baixar Quadrado (1:1)</button>' +
-      '<button type="button" class="btn-dup">Duplicar (nova cor)</button>' +
-      '<button type="button" class="btn-edit">Editar</button>' +
-      '<button type="button" class="btn-ghost btn-rm" aria-label="Remover criativo">✕</button>';
+      '<button type="button" class="btn-dl" title="Baixar Story (1080×1920)">⬇ Story</button>' +
+      '<button type="button" class="btn-dl-square" title="Baixar Quadrado (1080×1080)">⬇ Quadrado</button>' +
+      '<div class="row-span2">' +
+        '<button type="button" class="btn-dup" title="Duplicar (nova cor)">Duplicar</button>' +
+        '<button type="button" class="btn-edit">Editar</button>' +
+        '<button type="button" class="btn-ghost btn-rm" aria-label="Remover criativo">✕</button>' +
+      '</div>';
     card.appendChild(foot);
 
     var editPanel = document.createElement("div");
