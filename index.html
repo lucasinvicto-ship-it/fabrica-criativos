@@ -953,10 +953,6 @@
     });
   }
 
-  function externalImageForFormat(ext, fmt){
-    if(fmt==="square") return ext.feedImageDataUrl || ext.storyImageDataUrl;
-    return ext.storyImageDataUrl || ext.feedImageDataUrl;
-  }
 
   function parseBulkLine(line, fallbackCorpo, fallbackCta){
     var parts;
@@ -2750,6 +2746,50 @@
     });
   }
 
+  // "Zoom out" fit: shows the WHOLE image shrunk to fit inside W×H (never crops),
+  // with a blurred, cover-fit copy of the same image filling the leftover space —
+  // used as a safety fallback when a dedicated image for that format doesn't exist yet.
+  function loadImageToCanvasContain(url, W, H){
+    return new Promise(function(resolve, reject){
+      var img = new Image();
+      img.onload = function(){
+        var canvas = document.createElement("canvas");
+        canvas.width = W; canvas.height = H;
+        var ctx = canvas.getContext("2d");
+        var coverScale = Math.max(W/img.width, H/img.height);
+        var cw = img.width*coverScale, ch = img.height*coverScale;
+        try {
+          ctx.save();
+          ctx.filter = "blur(36px)";
+          ctx.drawImage(img, (W-cw)/2-30, (H-ch)/2-30, cw+60, ch+60);
+          ctx.restore();
+        } catch(e){
+          ctx.drawImage(img, (W-cw)/2, (H-ch)/2, cw, ch);
+        }
+        ctx.fillStyle = "rgba(0,0,0,0.2)";
+        ctx.fillRect(0,0,W,H);
+        var containScale = Math.min(W/img.width, H/img.height);
+        var dw = img.width*containScale, dh = img.height*containScale;
+        ctx.drawImage(img, (W-dw)/2, (H-dh)/2, dw, dh);
+        resolve(canvas);
+      };
+      img.onerror = function(){ reject(new Error("Não consegui carregar a imagem importada.")); };
+      img.src = url;
+    });
+  }
+
+  function resolveExternalImageForFormat(ext, fmt){
+    var W = fmt==="square" ? FEED_SQUARE_H : STORY_W;
+    var H = fmt==="square" ? FEED_SQUARE_H : STORY_H;
+    var dedicated = fmt==="square" ? ext.feedImageDataUrl : ext.storyImageDataUrl;
+    if(dedicated) return Promise.resolve(dedicated);
+    var fallback = fmt==="square" ? ext.storyImageDataUrl : ext.feedImageDataUrl;
+    if(!fallback) return Promise.resolve(null);
+    return loadImageToCanvasContain(fallback, W, H).then(function(canvas){
+      return canvas.toDataURL("image/png");
+    });
+  }
+
   function buildMedianCutPalette(samples, maxColors){
     if(!samples.length) return [[0,0,0]];
     var boxes = [samples];
@@ -3690,10 +3730,11 @@
               genBtn.textContent = "Gerando "+thisJob+"/"+total+"...";
               var ext = app.externalCreatives[i];
               var audioFile = files[i % files.length];
-              var srcImg = externalImageForFormat(ext, fmt);
-              return renderPosterVideoBlob(app, { id: ext.id, hook: ext.name }, audioFile, function(t){
-                genBtn.textContent = "Gerando "+thisJob+"/"+total+"... "+Math.round(t*100)+"%";
-              }, captionText, srcImg, motionSeq[i], fmt).then(function(result){
+              return resolveExternalImageForFormat(ext, fmt).then(function(srcImg){
+                return renderPosterVideoBlob(app, { id: ext.id, hook: ext.name }, audioFile, function(t){
+                  genBtn.textContent = "Gerando "+thisJob+"/"+total+"... "+Math.round(t*100)+"%";
+                }, captionText, srcImg, motionSeq[i], fmt);
+              }).then(function(result){
                 var blob = result.videoBlob;
                 var extn = (blob.type||"").indexOf("mp4")>-1 ? ".mp4" : ".webm";
                 if(dualFormat){
@@ -3787,10 +3828,11 @@
             chain = chain.then(function(){
               genBtn.textContent = "Gerando "+thisJob+"/"+total+"...";
               var ext = app.externalCreatives[i];
-              var srcImg = externalImageForFormat(ext, fmt);
-              return renderPosterGifBlob(app, { id: ext.id, hook: ext.name }, function(p){
-                genBtn.textContent = "Gerando "+thisJob+"/"+total+"... "+Math.round(p*100)+"%";
-              }, srcImg, motionSeq[i], fmt).then(function(result){
+              return resolveExternalImageForFormat(ext, fmt).then(function(srcImg){
+                return renderPosterGifBlob(app, { id: ext.id, hook: ext.name }, function(p){
+                  genBtn.textContent = "Gerando "+thisJob+"/"+total+"... "+Math.round(p*100)+"%";
+                }, srcImg, motionSeq[i], fmt);
+              }).then(function(result){
                 if(dualFormat){
                   var suffix = fmt==="square" ? "_quadrado" : "_story";
                   zipFiles.push({ name: sanitizeFilename((i+1)+"_"+ext.name)+suffix+".gif", data: new Uint8Array(0), _blob: result.gifBlob });
@@ -5529,18 +5571,24 @@
           '</div>';
         galleryEl.appendChild(item);
         item.querySelector(".btn-ext-video").addEventListener("click", function(){
-          var img = externalImageForFormat(ext, app.settings.videoFormat);
-          openVideoModal(app, { id: ext.id, hook: ext.name }, img);
+          resolveExternalImageForFormat(ext, app.settings.videoFormat).then(function(img){
+            openVideoModal(app, { id: ext.id, hook: ext.name }, img);
+          });
         });
         item.querySelector(".btn-ext-gif").addEventListener("click", function(){
-          var img = externalImageForFormat(ext, app.settings.videoFormat);
-          openGifModal(app, { id: ext.id, hook: ext.name }, img);
+          resolveExternalImageForFormat(ext, app.settings.videoFormat).then(function(img){
+            openGifModal(app, { id: ext.id, hook: ext.name }, img);
+          });
         });
         item.querySelector(".btn-ext-story").addEventListener("click", function(){
-          downloadExternalAsFormat(ext, STORY_W, STORY_H, "_story", ext.storyImageDataUrl || ext.feedImageDataUrl);
+          resolveExternalImageForFormat(ext, "story").then(function(img){
+            downloadExternalAsFormat(ext, STORY_W, STORY_H, "_story", img);
+          });
         });
         item.querySelector(".btn-ext-square").addEventListener("click", function(){
-          downloadExternalAsFormat(ext, FEED_SQUARE_H, FEED_SQUARE_H, "_quadrado", ext.feedImageDataUrl || ext.storyImageDataUrl);
+          resolveExternalImageForFormat(ext, "square").then(function(img){
+            downloadExternalAsFormat(ext, FEED_SQUARE_H, FEED_SQUARE_H, "_quadrado", img);
+          });
         });
         item.querySelector(".ext-add-story").addEventListener("change", function(e){
           var file = e.target.files && e.target.files[0];
