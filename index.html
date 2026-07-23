@@ -843,6 +843,19 @@
     if(!gallerySelection[appId]) gallerySelection[appId] = new Set();
     return gallerySelection[appId];
   }
+  function deepDefaults(target, defaults){
+    Object.keys(defaults).forEach(function(key){
+      var defVal = defaults[key];
+      if(target[key]===undefined){
+        target[key] = defVal;
+      } else if(defVal && typeof defVal==="object" && !Array.isArray(defVal) &&
+                target[key] && typeof target[key]==="object" && !Array.isArray(target[key])){
+        deepDefaults(target[key], defVal);
+      }
+    });
+    return target;
+  }
+
   function load(){
     try{
       var raw = localStorage.getItem(STORE_KEY);
@@ -904,6 +917,7 @@
           parsed.apps.push(betsBrasilApp());
         }
         if(!parsed.workspace) parsed.workspace = defaultWorkspace();
+        else deepDefaults(parsed.workspace, defaultWorkspace());
         if(!parsed.configView) parsed.configView = "ativos";
         if(!parsed.navView) parsed.navView = "fabrica";
         if(!parsed.templates) parsed.templates = defaultTemplates();
@@ -3380,10 +3394,12 @@
         '</div>' +
       '</div>';
     document.body.appendChild(overlay);
+    var cancelled = false;
     function close(){ overlay.remove(); document.removeEventListener("keydown", onKey); }
-    function onKey(e){ if(e.key==="Escape") close(); }
-    overlay.addEventListener("click", function(e){ if(e.target===overlay) close(); });
-    overlay.querySelector(".dl-close").addEventListener("click", close);
+    function userClose(){ cancelled = true; close(); }
+    function onKey(e){ if(e.key==="Escape") userClose(); }
+    overlay.addEventListener("click", function(e){ if(e.target===overlay) userClose(); });
+    overlay.querySelector(".dl-close").addEventListener("click", userClose);
     document.addEventListener("keydown", onKey);
 
     var mode = "auto";
@@ -3436,6 +3452,7 @@
             jobN++;
             var thisJob = jobN;
             chain = chain.then(function(){
+              if(cancelled) return;
               var cre = app.creatives[i];
               var narrationBase = mode==="auto" ? fetchGeneratedVoice(narrationTextFor(cre), app.settings.narrationVoiceId) : Promise.resolve(files[i % files.length]);
               return narrationBase.then(function(audioFile){
@@ -3463,6 +3480,7 @@
         });
       }
       chain.then(function(){
+        if(cancelled) return;
         close();
         if(dualFormat){
           var zipBlob = buildZip(zipFiles);
@@ -3559,10 +3577,12 @@
         '</div>' +
       '</div>';
     document.body.appendChild(overlay);
+    var cancelled = false;
     function close(){ overlay.remove(); document.removeEventListener("keydown", onKey); }
-    function onKey(e){ if(e.key==="Escape") close(); }
-    overlay.addEventListener("click", function(e){ if(e.target===overlay) close(); });
-    overlay.querySelector(".dl-close").addEventListener("click", close);
+    function userClose(){ cancelled = true; close(); }
+    function onKey(e){ if(e.key==="Escape") userClose(); }
+    overlay.addEventListener("click", function(e){ if(e.target===overlay) userClose(); });
+    overlay.querySelector(".dl-close").addEventListener("click", userClose);
     document.addEventListener("keydown", onKey);
 
     var genBtn = overlay.querySelector("#genBatchGifBtn");
@@ -3583,6 +3603,7 @@
             jobN++;
             var thisJob = jobN;
             chain = chain.then(function(){
+              if(cancelled) return;
               genBtn.textContent = "Gerando "+thisJob+"/"+total+"...";
               var cre = app.creatives[i];
               return renderPosterGifBlob(app, cre, function(p){
@@ -3602,6 +3623,7 @@
         });
       }
       chain.then(function(){
+        if(cancelled) return;
         if(dualFormat){
           var zipChain = Promise.resolve();
           zipFiles.forEach(function(f){
@@ -3613,6 +3635,7 @@
             });
           });
           return zipChain.then(function(){
+            if(cancelled) return;
             close();
             var zipBlob = buildZip(zipFiles);
             showZipModal(zipBlob, sanitizeFilename(app.name)+"_gifs_story_e_quadrado.zip");
@@ -3687,10 +3710,12 @@
         '</div>' +
       '</div>';
     document.body.appendChild(overlay);
+    var cancelled = false;
     function close(){ overlay.remove(); document.removeEventListener("keydown", onKey); }
-    function onKey(e){ if(e.key==="Escape") close(); }
-    overlay.addEventListener("click", function(e){ if(e.target===overlay) close(); });
-    overlay.querySelector(".dl-close").addEventListener("click", close);
+    function userClose(){ cancelled = true; close(); }
+    function onKey(e){ if(e.key==="Escape") userClose(); }
+    overlay.addEventListener("click", function(e){ if(e.target===overlay) userClose(); });
+    overlay.querySelector(".dl-close").addEventListener("click", userClose);
     document.addEventListener("keydown", onKey);
 
     var audioInput = overlay.querySelector("#batchAudioInputExt");
@@ -3727,6 +3752,7 @@
             jobN++;
             var thisJob = jobN;
             chain = chain.then(function(){
+              if(cancelled) return;
               genBtn.textContent = "Gerando "+thisJob+"/"+total+"...";
               var ext = app.externalCreatives[i];
               var audioFile = files[i % files.length];
@@ -3753,6 +3779,7 @@
         });
       }
       chain.then(function(){
+        if(cancelled) return;
         close();
         if(dualFormat){
           var zipBlob = buildZip(zipFiles);
@@ -3802,10 +3829,12 @@
         '</div>' +
       '</div>';
     document.body.appendChild(overlay);
+    var cancelled = false;
     function close(){ overlay.remove(); document.removeEventListener("keydown", onKey); }
-    function onKey(e){ if(e.key==="Escape") close(); }
-    overlay.addEventListener("click", function(e){ if(e.target===overlay) close(); });
-    overlay.querySelector(".dl-close").addEventListener("click", close);
+    function userClose(){ cancelled = true; close(); }
+    function onKey(e){ if(e.key==="Escape") userClose(); }
+    overlay.addEventListener("click", function(e){ if(e.target===overlay) userClose(); });
+    overlay.querySelector(".dl-close").addEventListener("click", userClose);
     document.addEventListener("keydown", onKey);
 
     var genBtn = overlay.querySelector("#genBatchGifBtnExt");
@@ -3826,6 +3855,7 @@
             jobN++;
             var thisJob = jobN;
             chain = chain.then(function(){
+              if(cancelled) return;
               genBtn.textContent = "Gerando "+thisJob+"/"+total+"...";
               var ext = app.externalCreatives[i];
               return resolveExternalImageForFormat(ext, fmt).then(function(srcImg){
@@ -3847,6 +3877,7 @@
         });
       }
       chain.then(function(){
+        if(cancelled) return;
         if(dualFormat){
           var zipChain = Promise.resolve();
           zipFiles.forEach(function(f){
@@ -3858,6 +3889,7 @@
             });
           });
           return zipChain.then(function(){
+            if(cancelled) return;
             close();
             var zipBlob = buildZip(zipFiles);
             showZipModal(zipBlob, sanitizeFilename(app.name)+"_externos_gifs_story_e_quadrado.zip");
@@ -5290,6 +5322,7 @@
     });
 
     // ---- vídeo narrado (preferências do lote) ----
+    var narrationInputRefs = []; // keeps the two "Vídeo narrado" instances (own gallery + external) in sync live
     function buildNarrationBlock(app, idSuffix){
       idSuffix = idSuffix || "";
       var narrationBlock = document.createElement("section");
@@ -5309,17 +5342,30 @@
             '<option value="square"'+(app.settings.videoFormat==="square"?" selected":"")+'>Quadrado (1080×1080)</option>' +
           '</select></div>' +
         '</div>';
-      narrationBlock.querySelector("#narrLangSel"+idSuffix).addEventListener("change", function(e){
+      var langSel = narrationBlock.querySelector("#narrLangSel"+idSuffix);
+      var voiceLabelInput = narrationBlock.querySelector("#narrVoiceLabel"+idSuffix);
+      var voiceIdInput = narrationBlock.querySelector("#narrVoiceId"+idSuffix);
+      var formatSelEl = narrationBlock.querySelector("#narrFormatSel"+idSuffix);
+      var refs = { langSel: langSel, voiceLabelInput: voiceLabelInput, voiceIdInput: voiceIdInput, formatSelEl: formatSelEl };
+      narrationInputRefs.push(refs);
+      function syncOthers(field, value){
+        narrationInputRefs.forEach(function(r){ if(r!==refs) r[field].value = value; });
+      }
+      langSel.addEventListener("change", function(e){
         app.settings.narrationLanguage = e.target.value; save();
+        syncOthers("langSel", e.target.value);
       });
-      narrationBlock.querySelector("#narrVoiceLabel"+idSuffix).addEventListener("input", function(e){
+      voiceLabelInput.addEventListener("input", function(e){
         app.settings.narrationVoiceLabel = e.target.value; save();
+        syncOthers("voiceLabelInput", e.target.value);
       });
-      narrationBlock.querySelector("#narrVoiceId"+idSuffix).addEventListener("input", function(e){
+      voiceIdInput.addEventListener("input", function(e){
         app.settings.narrationVoiceId = e.target.value.trim(); save();
+        syncOthers("voiceIdInput", e.target.value);
       });
-      narrationBlock.querySelector("#narrFormatSel"+idSuffix).addEventListener("change", function(e){
+      formatSelEl.addEventListener("change", function(e){
         app.settings.videoFormat = e.target.value; save();
+        syncOthers("formatSelEl", e.target.value);
       });
       return narrationBlock;
     }
