@@ -3058,9 +3058,8 @@
 
   // Burns a TikTok-style caption onto an already-finished external video, keeping its
   // original audio untouched — no narration, no motion, just overlay + re-encode.
-  // Needs HTMLVideoElement.captureStream() for the audio passthrough, which is solid in
-  // Chrome/Edge/Firefox but historically inconsistent in Safari — flagged to the user.
   var ffmpegSingleton = null;
+  var ffmpegLogBuffer = [];
   function getFFmpeg(){
     if(ffmpegSingleton) return Promise.resolve(ffmpegSingleton);
     if(!window.FFmpeg || !window.FFmpeg.createFFmpeg){
@@ -3070,7 +3069,34 @@
       log: false,
       corePath: "https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js"
     });
+    ffmpeg.setLogger(function(entry){
+      var msg = (entry && entry.message) || "";
+      ffmpegLogBuffer.push(msg);
+      if(ffmpegLogBuffer.length>50) ffmpegLogBuffer.shift();
+    });
     return ffmpeg.load().then(function(){ ffmpegSingleton = ffmpeg; return ffmpeg; });
+  }
+
+  function withTimeout(promise, ms, timeoutMessage){
+    return new Promise(function(resolve, reject){
+      var settled = false;
+      var timer = setTimeout(function(){
+        if(settled) return;
+        settled = true;
+        reject(new Error(timeoutMessage));
+      }, ms);
+      promise.then(function(v){
+        if(settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve(v);
+      }, function(err){
+        if(settled) return;
+        settled = true;
+        clearTimeout(timer);
+        reject(err);
+      });
+    });
   }
 
   function renderCaptionOverlayPng(text, W, H, styleKey){
@@ -3159,7 +3185,12 @@
             });
           }
 
-          return ffmpeg.run.apply(ffmpeg, args).then(function(){
+          ffmpegLogBuffer.length = 0;
+          return withTimeout(
+            ffmpeg.run.apply(ffmpeg, args),
+            240000,
+            "O processamento travou por mais de 4 minutos (provavelmente o formato/codec desse vídeo específico ou o tamanho dele não é compatível com o processador dentro do navegador). Últimas linhas do processador: " + ffmpegLogBuffer.slice(-8).join(" | ")
+          ).then(function(){
             var data = ffmpeg.FS("readFile", outName);
             try{ ffmpeg.FS("unlink", inputName); }catch(e){}
             overlays.forEach(function(o){ try{ ffmpeg.FS("unlink", o.name); }catch(e){} });
@@ -3168,7 +3199,11 @@
             resolve({ videoBlob: new Blob([data], {type:"video/mp4"}) });
           });
         }).catch(function(err){
-          reject(err instanceof Error ? err : new Error(String((err && err.message) || err || "Erro ao processar vídeo")));
+          var baseMsg = (err && err.message) || String(err || "Erro ao processar vídeo");
+          if(ffmpegLogBuffer.length && baseMsg.indexOf("Últimas linhas")===-1){
+            baseMsg += " — Últimas linhas do processador: " + ffmpegLogBuffer.slice(-8).join(" | ");
+          }
+          reject(new Error(baseMsg));
         });
       });
     });
