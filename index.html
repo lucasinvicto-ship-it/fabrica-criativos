@@ -2655,7 +2655,19 @@
     return chunks;
   }
 
-  function drawVideoCaption(ctx, text, W, H, layout, yFraction){
+  var CAPTION_STYLES = {
+    classico: { bar:true, bg:"rgba(0,0,0,0.6)", text:"#ffffff", stroke:"rgba(0,0,0,0.5)" },
+    amarelo:  { bar:false, bg:null, text:"#ffe234", stroke:"rgba(0,0,0,0.9)" },
+    branco:   { bar:true, bg:"rgba(255,255,255,0.92)", text:"#111111", stroke:"rgba(255,255,255,0.35)" }
+  };
+  var CAPTION_STYLE_LABELS = [
+    { key:"classico", label:"Clássico (caixa preta)" },
+    { key:"amarelo", label:"Amarelo impacto (sem caixa)" },
+    { key:"branco", label:"Caixa branca" }
+  ];
+
+  function drawVideoCaption(ctx, text, W, H, layout, yFraction, styleKey){
+    var style = CAPTION_STYLES[styleKey] || CAPTION_STYLES.classico;
     var maxWidth = W*0.8;
     ctx.font = "800 40px 'Arial Black', Arial, sans-serif";
     var lines = wrapCanvasText(ctx, text.toUpperCase(), maxWidth).slice(0,2);
@@ -2664,21 +2676,23 @@
     var centerY = H * (yFraction==null ? 0.5 : yFraction);
     var barY = centerY - barH/2;
     ctx.save();
-    ctx.fillStyle = "rgba(0,0,0,0.6)";
-    var rx = 16, bx = W*0.08, bw = W*0.84;
-    ctx.beginPath();
-    ctx.moveTo(bx+rx, barY);
-    ctx.arcTo(bx+bw, barY, bx+bw, barY+barH, rx);
-    ctx.arcTo(bx+bw, barY+barH, bx, barY+barH, rx);
-    ctx.arcTo(bx, barY+barH, bx, barY, rx);
-    ctx.arcTo(bx, barY, bx+bw, barY, rx);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = "#ffffff";
+    if(style.bar){
+      ctx.fillStyle = style.bg;
+      var rx = 16, bx = W*0.08, bw = W*0.84;
+      ctx.beginPath();
+      ctx.moveTo(bx+rx, barY);
+      ctx.arcTo(bx+bw, barY, bx+bw, barY+barH, rx);
+      ctx.arcTo(bx+bw, barY+barH, bx, barY+barH, rx);
+      ctx.arcTo(bx, barY+barH, bx, barY, rx);
+      ctx.arcTo(bx, barY, bx+bw, barY, rx);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.fillStyle = style.text;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.lineWidth = 6;
-    ctx.strokeStyle = "rgba(0,0,0,0.5)";
+    ctx.strokeStyle = style.stroke;
     lines.forEach(function(line, i){
       var ly = barY+17+lineH*i+lineH/2;
       ctx.strokeText(line, W/2, ly);
@@ -3043,7 +3057,7 @@
   // original audio untouched — no narration, no motion, just overlay + re-encode.
   // Needs HTMLVideoElement.captureStream() for the audio passthrough, which is solid in
   // Chrome/Edge/Firefox but historically inconsistent in Safari — flagged to the user.
-  function renderVideoWithCaptionsBlob(videoFile, captionText, onProgress, wordTimestamps){
+  function renderVideoWithCaptionsBlob(videoFile, captionText, onProgress, wordTimestamps, styleKey){
     return new Promise(function(resolve, reject){
       if(!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream){
         reject(new Error("Seu navegador não suporta gravação de vídeo (precisa de MediaRecorder + captureStream)."));
@@ -3106,11 +3120,11 @@
           ctx.drawImage(videoEl, 0, 0, W, H);
           if(timedChunks){
             var active = timedChunks.filter(function(c){ return elapsed>=c.start && elapsed<=c.end; })[0];
-            if(active) drawVideoCaption(ctx, active.text, W, H, null, 0.78);
+            if(active) drawVideoCaption(ctx, active.text, W, H, null, 0.78, styleKey);
           } else if(captionChunks.length){
             var chunkDur = duration/captionChunks.length;
             var idx = Math.min(Math.floor(elapsed/chunkDur), captionChunks.length-1);
-            drawVideoCaption(ctx, captionChunks[idx], W, H, null, 0.78);
+            drawVideoCaption(ctx, captionChunks[idx], W, H, null, 0.78, styleKey);
           }
           if(onProgress) onProgress(t);
           if(elapsed < duration && !videoEl.ended){
@@ -5128,6 +5142,9 @@
 
     var formBlock = document.createElement("div");
     formBlock.className = "config-block";
+    var styleOptionsHtml = CAPTION_STYLE_LABELS.map(function(s){
+      return '<option value="'+s.key+'">'+xmlEscape(s.label)+'</option>';
+    }).join("");
     formBlock.innerHTML =
       '<h3>Vídeo + legenda</h3>' +
       '<label>Vídeo (mp4/webm/mov)</label>' +
@@ -5141,8 +5158,11 @@
       '</div>' +
       '<label style="margin-top:14px">Texto da fala (transcreva acima ou digite manualmente — em blocos de 4 palavras)</label>' +
       '<textarea id="lgCaptionText" rows="4" placeholder="Cole aqui exatamente o que é falado no vídeo, ou clique em Transcrever automaticamente acima..."></textarea>' +
+      '<label style="margin-top:14px">Estilo da legenda</label>' +
+      '<select id="lgStyleSelect">'+styleOptionsHtml+'</select>' +
       '<div class="form-actions" style="margin-top:14px">' +
         '<button type="button" class="btn-primary gen-lote-btn" id="lgGenBtn" disabled>⬆️ Escolha um vídeo primeiro</button>' +
+        '<button type="button" class="btn-secondary btn-sm" id="lgAddQueueBtn" disabled>➕ Adicionar à fila em lote</button>' +
         '<span class="hint" id="lgHint"></span>' +
       '</div>';
     wrap.appendChild(formBlock);
@@ -5153,7 +5173,9 @@
     var transcribeBtn = formBlock.querySelector("#lgTranscribeBtn");
     var syncHint = formBlock.querySelector("#lgSyncHint");
     var captionInput = formBlock.querySelector("#lgCaptionText");
+    var styleSelect = formBlock.querySelector("#lgStyleSelect");
     var genBtn = formBlock.querySelector("#lgGenBtn");
+    var addQueueBtn = formBlock.querySelector("#lgAddQueueBtn");
     var hint = formBlock.querySelector("#lgHint");
     var chosenFile = null;
     var wordTimestamps = null;
@@ -5180,6 +5202,7 @@
       genBtn.disabled = !chosenFile;
       genBtn.textContent = chosenFile ? "Gerar vídeo com legenda" : "⬆️ Escolha um vídeo primeiro";
       transcribeBtn.disabled = !chosenFile;
+      addQueueBtn.disabled = !chosenFile;
       hint.textContent = "";
     });
 
@@ -5217,7 +5240,7 @@
       hint.textContent = "";
       renderVideoWithCaptionsBlob(chosenFile, captionText, function(t){
         genBtn.textContent = "Gravando... "+Math.round(t*100)+"%";
-      }, wordTimestamps).then(function(result){
+      }, wordTimestamps, styleSelect.value).then(function(result){
         var blob = result.videoBlob;
         var ext = (blob.type||"").indexOf("mp4")>-1 ? ".mp4" : ".webm";
         var filename = sanitizeFilename(chosenFile.name.replace(/\.[^.]+$/,""))+"_legendado"+ext;
@@ -5228,6 +5251,103 @@
       }).then(function(){
         genBtn.disabled = false; videoInput.disabled = false; transcribeBtn.disabled = false;
         genBtn.textContent = "Gerar vídeo com legenda";
+      });
+    });
+
+    // ---- lote (fila de vários vídeos + legendas, gera tudo de uma vez num ZIP) ----
+    var batchBlock = document.createElement("div");
+    batchBlock.className = "config-block";
+    batchBlock.style.marginTop = "20px";
+    batchBlock.innerHTML =
+      '<h3>🗂 Fila em lote</h3>' +
+      '<p class="config-desc">Adicione vários vídeos com suas falas na fila (botão "Adicionar à fila em lote" acima) e gere todos de uma vez num ZIP.</p>' +
+      '<div id="lgQueueList"></div>' +
+      '<div class="form-actions" style="margin-top:14px">' +
+        '<button type="button" class="btn-primary gen-lote-btn" id="lgBatchGenBtn" disabled>🗂 Gerar todos em lote (0)</button>' +
+        '<span class="hint" id="lgBatchHint"></span>' +
+      '</div>';
+    wrap.appendChild(batchBlock);
+
+    var queueListEl = batchBlock.querySelector("#lgQueueList");
+    var batchGenBtn = batchBlock.querySelector("#lgBatchGenBtn");
+    var batchHint = batchBlock.querySelector("#lgBatchHint");
+    var queue = [];
+
+    function renderQueue(){
+      queueListEl.innerHTML = "";
+      if(!queue.length){
+        queueListEl.innerHTML = '<p class="hint">Fila vazia.</p>';
+      } else {
+        queue.forEach(function(item, idx){
+          var row = document.createElement("div");
+          row.className = "config-list-item";
+          row.innerHTML =
+            '<div><div class="name">'+xmlEscape(item.file.name)+'</div><div class="sub">'+xmlEscape(item.captionText.slice(0,60))+(item.captionText.length>60?"...":"")+'</div></div>' +
+            '<button type="button" class="rm">remover</button>';
+          row.querySelector(".rm").addEventListener("click", function(){
+            queue.splice(idx,1);
+            renderQueue();
+          });
+          queueListEl.appendChild(row);
+        });
+      }
+      batchGenBtn.disabled = !queue.length;
+      batchGenBtn.textContent = "🗂 Gerar todos em lote ("+queue.length+")";
+    }
+    renderQueue();
+
+    addQueueBtn.addEventListener("click", function(){
+      if(!chosenFile) return;
+      var captionText = captionInput.value.trim();
+      if(!captionText){ hint.textContent = "Cola o texto da fala primeiro (ou transcreve automaticamente)."; return; }
+      queue.push({ file: chosenFile, captionText: captionText, wordTimestamps: wordTimestamps, styleKey: styleSelect.value });
+      renderQueue();
+      hint.textContent = "";
+      syncHint.textContent = "";
+      // reseta o formulário pro próximo vídeo da fila
+      videoInput.value = "";
+      chosenFile = null;
+      wordTimestamps = null;
+      previewWrap.style.display = "none";
+      settingTextProgrammatically = true;
+      captionInput.value = "";
+      settingTextProgrammatically = false;
+      genBtn.disabled = true; genBtn.textContent = "⬆️ Escolha um vídeo primeiro";
+      transcribeBtn.disabled = true;
+      addQueueBtn.disabled = true;
+    });
+
+    batchGenBtn.addEventListener("click", function(){
+      if(!queue.length) return;
+      batchGenBtn.disabled = true;
+      var zipFiles = [];
+      var chain = Promise.resolve();
+      queue.forEach(function(item, idx){
+        chain = chain.then(function(){
+          batchGenBtn.textContent = "Gerando "+(idx+1)+"/"+queue.length+"... 0%";
+          return renderVideoWithCaptionsBlob(item.file, item.captionText, function(t){
+            batchGenBtn.textContent = "Gerando "+(idx+1)+"/"+queue.length+"... "+Math.round(t*100)+"%";
+          }, item.wordTimestamps, item.styleKey);
+        }).then(function(result){
+          var blob = result.videoBlob;
+          var ext = (blob.type||"").indexOf("mp4")>-1 ? ".mp4" : ".webm";
+          var name = sanitizeFilename((idx+1)+"_"+item.file.name.replace(/\.[^.]+$/,""))+"_legendado"+ext;
+          return blob.arrayBuffer().then(function(buf){
+            zipFiles.push({ name: name, data: new Uint8Array(buf) });
+          });
+        });
+      });
+      chain.then(function(){
+        var zipBlob = buildZip(zipFiles);
+        showZipModal(zipBlob, "legendas_lote.zip");
+        queue = [];
+        renderQueue();
+        batchHint.textContent = "";
+      }).catch(function(err){
+        console.error(err);
+        batchHint.textContent = "Erro no lote: "+(err.message||err);
+      }).then(function(){
+        batchGenBtn.disabled = false;
       });
     });
 
