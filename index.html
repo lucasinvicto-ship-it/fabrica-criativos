@@ -403,6 +403,9 @@
   <main class="main" id="mainPanels"></main>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"
+  integrity="sha256-Z7x9xNwEIoKGv7GgRWmpkSvw8lU0y9hGJlbGYNVVzqM="
+  crossorigin="anonymous"></script>
 <script>
 (function(){
   "use strict";
@@ -3057,85 +3060,116 @@
   // original audio untouched — no narration, no motion, just overlay + re-encode.
   // Needs HTMLVideoElement.captureStream() for the audio passthrough, which is solid in
   // Chrome/Edge/Firefox but historically inconsistent in Safari — flagged to the user.
+  var ffmpegSingleton = null;
+  function getFFmpeg(){
+    if(ffmpegSingleton) return Promise.resolve(ffmpegSingleton);
+    if(!window.FFmpeg || !window.FFmpeg.createFFmpeg){
+      return Promise.reject(new Error("Não consegui carregar o processador de vídeo. Confira sua conexão com a internet e recarregue a página."));
+    }
+    var ffmpeg = window.FFmpeg.createFFmpeg({
+      log: false,
+      corePath: "https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js"
+    });
+    return ffmpeg.load().then(function(){ ffmpegSingleton = ffmpeg; return ffmpeg; });
+  }
+
+  function renderCaptionOverlayPng(text, W, H, styleKey){
+    var canvas = document.createElement("canvas");
+    canvas.width = W; canvas.height = H;
+    var ctx = canvas.getContext("2d");
+    drawVideoCaption(ctx, text, W, H, null, 0.78, styleKey);
+    return new Promise(function(resolve){
+      canvas.toBlob(function(blob){ resolve(blob); }, "image/png");
+    });
+  }
+
   function renderVideoWithCaptionsBlob(videoFile, captionText, onProgress, styleKey){
     return new Promise(function(resolve, reject){
-      if(!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream){
-        reject(new Error("Seu navegador não suporta gravação de vídeo (precisa de MediaRecorder + captureStream)."));
-        return;
-      }
       var videoUrl = URL.createObjectURL(videoFile);
       var videoEl = document.createElement("video");
       videoEl.src = videoUrl;
-      videoEl.muted = false;
+      videoEl.muted = true;
       videoEl.playsInline = true;
 
       var cleaned = false;
-      function cleanup(){ if(cleaned) return; cleaned = true; URL.revokeObjectURL(videoUrl); }
+      function cleanupUrl(){ if(cleaned) return; cleaned = true; URL.revokeObjectURL(videoUrl); }
 
       videoEl.addEventListener("error", function(){
-        cleanup();
+        cleanupUrl();
         reject(new Error("Não consegui carregar esse vídeo. Confira se é um mp4/webm/mov válido."));
       });
 
       videoEl.addEventListener("loadedmetadata", function(){
         var W = videoEl.videoWidth, H = videoEl.videoHeight;
-        if(!W || !H){ cleanup(); reject(new Error("Não consegui ler as dimensões do vídeo.")); return; }
         var duration = Math.min(videoEl.duration || 60, 90);
-        if(!isFinite(duration) || duration<=0){ cleanup(); reject(new Error("Vídeo sem duração válida.")); return; }
+        cleanupUrl();
+        if(!W || !H){ reject(new Error("Não consegui ler as dimensões do vídeo.")); return; }
+        if(!isFinite(duration) || duration<=0){ reject(new Error("Vídeo sem duração válida.")); return; }
 
-        var canvas = document.createElement("canvas");
-        canvas.width = W; canvas.height = H;
-        var ctx = canvas.getContext("2d");
         var captionChunks = captionText ? buildCaptionChunks(captionText) : [];
+        var chunkDur = captionChunks.length ? duration/captionChunks.length : duration;
+        var ffmpeg = null;
 
-        var videoCaptureFn = videoEl.captureStream || videoEl.mozCaptureStream;
-        if(!videoCaptureFn){
-          cleanup();
-          reject(new Error("Esse navegador não consegue extrair o áudio do vídeo (captureStream indisponível) — tenta no Chrome, Edge ou Firefox."));
-          return;
-        }
-        var sourceStream = videoCaptureFn.call(videoEl);
-        var canvasStream = canvas.captureStream(30);
-        var combined = new MediaStream();
-        canvasStream.getVideoTracks().forEach(function(t){ combined.addTrack(t); });
-        sourceStream.getAudioTracks().forEach(function(t){ combined.addTrack(t); });
+        if(onProgress) onProgress(0.02);
 
-        var mimeCandidates = ["video/mp4;codecs=avc1,mp4a","video/mp4","video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm"];
-        var mime = mimeCandidates.filter(function(m){ return MediaRecorder.isTypeSupported(m); })[0] || "";
-        var recorder = mime ? new MediaRecorder(combined, {mimeType:mime}) : new MediaRecorder(combined);
-        var chunks = [];
-        recorder.ondataavailable = function(e){ if(e.data && e.data.size) chunks.push(e.data); };
-        recorder.onstop = function(){
-          cleanup();
-          resolve({ videoBlob: new Blob(chunks, {type: mime || "video/webm"}) });
-        };
-        recorder.onerror = function(e){ cleanup(); reject((e && e.error) || new Error("Erro na gravação")); };
+        getFFmpeg().then(function(fm){
+          ffmpeg = fm;
+          if(onProgress) onProgress(0.08);
+          return window.FFmpeg.fetchFile(videoFile);
+        }).then(function(inputData){
+          var extMatch = (videoFile.name||"").match(/\.[a-zA-Z0-9]+$/);
+          var inputName = "input" + (extMatch ? extMatch[0] : ".mp4");
+          ffmpeg.FS("writeFile", inputName, inputData);
 
-        var startTime = null;
-        function frame(ts){
-          if(startTime===null) startTime = ts;
-          var elapsed = (ts-startTime)/1000;
-          var t = Math.min(elapsed/duration, 1);
-          ctx.drawImage(videoEl, 0, 0, W, H);
-          if(captionChunks.length){
-            var chunkDur = duration/captionChunks.length;
-            var idx = Math.min(Math.floor(elapsed/chunkDur), captionChunks.length-1);
-            drawVideoCaption(ctx, captionChunks[idx], W, H, null, 0.78, styleKey);
+          return Promise.all(captionChunks.map(function(text, idx){
+            return renderCaptionOverlayPng(text, W, H, styleKey).then(function(blob){
+              return blob.arrayBuffer();
+            }).then(function(buf){
+              var name = "cap_"+idx+".png";
+              ffmpeg.FS("writeFile", name, new Uint8Array(buf));
+              return { name: name, start: idx*chunkDur, end: Math.min((idx+1)*chunkDur, duration) };
+            });
+          })).then(function(overlays){
+            return { inputName: inputName, overlays: overlays };
+          });
+        }).then(function(ctxObj){
+          var inputName = ctxObj.inputName, overlays = ctxObj.overlays;
+          var args = ["-i", inputName];
+          overlays.forEach(function(o){ args.push("-i", o.name); });
+
+          var outName = "output.mp4";
+          if(overlays.length){
+            var filterParts = [];
+            var lastLabel = "0:v";
+            overlays.forEach(function(o, idx){
+              var isLast = idx===overlays.length-1;
+              var outLabel = isLast ? "vout" : ("v"+(idx+1));
+              filterParts.push("["+lastLabel+"]["+(idx+1)+":v]overlay=enable='between(t,"+o.start.toFixed(3)+","+o.end.toFixed(3)+")'["+outLabel+"]");
+              lastLabel = outLabel;
+            });
+            args.push("-filter_complex", filterParts.join(";"));
+            args.push("-map", "[vout]", "-map", "0:a?");
           }
-          if(onProgress) onProgress(t);
-          if(elapsed < duration && !videoEl.ended){
-            requestAnimationFrame(frame);
-          } else {
-            recorder.stop();
-            videoEl.pause();
-          }
-        }
+          args.push("-c:v","libx264","-preset","veryfast","-crf","20","-c:a","aac","-b:a","192k","-movflags","+faststart",outName);
 
-        recorder.start();
-        videoEl.currentTime = 0;
-        videoEl.play().then(function(){
-          requestAnimationFrame(frame);
-        }).catch(function(err){ cleanup(); reject(err); });
+          if(onProgress){
+            ffmpeg.setProgress(function(p){
+              var ratio = (p && typeof p.ratio === "number") ? p.ratio : 0;
+              onProgress(0.1 + Math.min(Math.max(ratio,0),1)*0.85);
+            });
+          }
+
+          return ffmpeg.run.apply(ffmpeg, args).then(function(){
+            var data = ffmpeg.FS("readFile", outName);
+            try{ ffmpeg.FS("unlink", inputName); }catch(e){}
+            overlays.forEach(function(o){ try{ ffmpeg.FS("unlink", o.name); }catch(e){} });
+            try{ ffmpeg.FS("unlink", outName); }catch(e){}
+            if(onProgress) onProgress(1);
+            resolve({ videoBlob: new Blob([data], {type:"video/mp4"}) });
+          });
+        }).catch(function(err){
+          reject(err instanceof Error ? err : new Error(String((err && err.message) || err || "Erro ao processar vídeo")));
+        });
       });
     });
   }
@@ -5039,7 +5073,7 @@
     wrap.innerHTML =
       '<h2 style="margin:0 0 4px">Legendas</h2>' +
       '<p class="hint" style="margin-bottom:20px">Sobe um vídeo já pronto (de fora da ferramenta) + cola o texto da fala, e sai com a legenda estilo TikTok gravada por cima — mantém o áudio original do vídeo, sem gerar narração nova.</p>' +
-      '<div class="mock-banner">⚠️ Precisa de Chrome, Edge ou Firefox atualizado — o Safari não extrai o áudio do vídeo de forma confiável pra essa função.</div>';
+      '<div class="mock-banner">⚠️ Na primeira vez que gerar um vídeo aqui, o navegador baixa o processador de vídeo (uns 25MB, só uma vez, fica salvo depois). O processamento demora mais que tempo real — não é mais instantâneo, mas preserva qualidade e sincronia.</div>';
 
     var formBlock = document.createElement("div");
     formBlock.className = "config-block";
@@ -5093,10 +5127,10 @@
       var captionText = captionInput.value.trim();
       if(!captionText){ hint.textContent = "Cola o texto da fala primeiro."; return; }
       genBtn.disabled = true; videoInput.disabled = true;
-      genBtn.textContent = "Gravando... 0%";
+      genBtn.textContent = "Processando... 0%";
       hint.textContent = "";
       renderVideoWithCaptionsBlob(chosenFile, captionText, function(t){
-        genBtn.textContent = "Gravando... "+Math.round(t*100)+"%";
+        genBtn.textContent = "Processando... "+Math.round(t*100)+"%";
       }, styleSelect.value).then(function(result){
         var blob = result.videoBlob;
         var ext = (blob.type||"").indexOf("mp4")>-1 ? ".mp4" : ".webm";
