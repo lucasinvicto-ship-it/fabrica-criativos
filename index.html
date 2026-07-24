@@ -3043,7 +3043,7 @@
   // original audio untouched — no narration, no motion, just overlay + re-encode.
   // Needs HTMLVideoElement.captureStream() for the audio passthrough, which is solid in
   // Chrome/Edge/Firefox but historically inconsistent in Safari — flagged to the user.
-  function renderVideoWithCaptionsBlob(videoFile, captionText, onProgress){
+  function renderVideoWithCaptionsBlob(videoFile, captionText, onProgress, wordTimestamps){
     return new Promise(function(resolve, reject){
       if(!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream){
         reject(new Error("Seu navegador não suporta gravação de vídeo (precisa de MediaRecorder + captureStream)."));
@@ -3072,7 +3072,8 @@
         var canvas = document.createElement("canvas");
         canvas.width = W; canvas.height = H;
         var ctx = canvas.getContext("2d");
-        var captionChunks = captionText ? buildCaptionChunks(captionText) : [];
+        var timedChunks = (wordTimestamps && wordTimestamps.length) ? buildTimedCaptionChunks(wordTimestamps) : null;
+        var captionChunks = (!timedChunks && captionText) ? buildCaptionChunks(captionText) : [];
 
         var videoCaptureFn = videoEl.captureStream || videoEl.mozCaptureStream;
         if(!videoCaptureFn){
@@ -3103,7 +3104,10 @@
           var elapsed = (ts-startTime)/1000;
           var t = Math.min(elapsed/duration, 1);
           ctx.drawImage(videoEl, 0, 0, W, H);
-          if(captionChunks.length){
+          if(timedChunks){
+            var active = timedChunks.filter(function(c){ return elapsed>=c.start && elapsed<=c.end; })[0];
+            if(active) drawVideoCaption(ctx, active.text, W, H, null, 0.78);
+          } else if(captionChunks.length){
             var chunkDur = duration/captionChunks.length;
             var idx = Math.min(Math.floor(elapsed/chunkDur), captionChunks.length-1);
             drawVideoCaption(ctx, captionChunks[idx], W, H, null, 0.78);
@@ -3215,6 +3219,101 @@
         });
       }).catch(reject);
     });
+  }
+
+  function blobToBase64(blob){
+    return new Promise(function(resolve, reject){
+      var r = new FileReader();
+      r.onload = function(){
+        var result = r.result;
+        resolve(result.slice(result.indexOf(",")+1));
+      };
+      r.onerror = reject;
+      r.readAsDataURL(blob);
+    });
+  }
+
+  function extractAudioBlob(videoFile){
+    return new Promise(function(resolve, reject){
+      var videoUrl = URL.createObjectURL(videoFile);
+      var videoEl = document.createElement("video");
+      videoEl.src = videoUrl;
+      videoEl.muted = false;
+      videoEl.volume = 0;
+      videoEl.playsInline = true;
+
+      var cleaned = false;
+      function cleanup(){ if(cleaned) return; cleaned = true; URL.revokeObjectURL(videoUrl); }
+
+      videoEl.addEventListener("error", function(){
+        cleanup();
+        reject(new Error("Não consegui carregar esse vídeo."));
+      });
+
+      videoEl.addEventListener("loadedmetadata", function(){
+        var duration = Math.min(videoEl.duration || 60, 90);
+        if(!isFinite(duration) || duration<=0){ cleanup(); reject(new Error("Vídeo sem duração válida.")); return; }
+
+        var captureFn = videoEl.captureStream || videoEl.mozCaptureStream;
+        if(!captureFn){ cleanup(); reject(new Error("Esse navegador não consegue extrair o áudio do vídeo — tenta no Chrome, Edge ou Firefox.")); return; }
+        var sourceStream = captureFn.call(videoEl);
+        var audioTracks = sourceStream.getAudioTracks();
+        if(!audioTracks.length){ cleanup(); reject(new Error("Esse vídeo não tem faixa de áudio pra transcrever.")); return; }
+
+        var audioOnly = new MediaStream();
+        audioTracks.forEach(function(t){ audioOnly.addTrack(t); });
+
+        var mimeCandidates = ["audio/webm;codecs=opus","audio/webm","audio/mp4"];
+        var mime = mimeCandidates.filter(function(m){ return MediaRecorder.isTypeSupported(m); })[0] || "";
+        var recorder = mime ? new MediaRecorder(audioOnly, {mimeType:mime}) : new MediaRecorder(audioOnly);
+        var chunks = [];
+        var stopped = false;
+        function doStop(){ if(stopped) return; stopped = true; try{ recorder.stop(); }catch(e){} videoEl.pause(); }
+        recorder.ondataavailable = function(e){ if(e.data && e.data.size) chunks.push(e.data); };
+        recorder.onstop = function(){
+          cleanup();
+          resolve(new Blob(chunks, {type: mime || "audio/webm"}));
+        };
+        recorder.onerror = function(e){ cleanup(); reject((e && e.error) || new Error("Erro ao extrair áudio")); };
+
+        videoEl.addEventListener("ended", doStop);
+        recorder.start();
+        videoEl.currentTime = 0;
+        videoEl.play().then(function(){
+          setTimeout(doStop, duration*1000 + 250);
+        }).catch(function(err){ cleanup(); reject(err); });
+      });
+    });
+  }
+
+  function fetchTranscription(audioBlob){
+    return blobToBase64(audioBlob).then(function(base64){
+      return fetch("/api/transcribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ audioBase64: base64, mimeType: audioBlob.type })
+      });
+    }).then(function(r){
+      if(!r.ok){
+        return r.json().catch(function(){ return {}; }).then(function(errBody){
+          throw new Error(errBody.error || ("Erro "+r.status+" ao transcrever"));
+        });
+      }
+      return r.json();
+    });
+  }
+
+  function buildTimedCaptionChunks(words){
+    var chunks = [];
+    for(var i=0;i<words.length;i+=4){
+      var slice = words.slice(i,i+4);
+      chunks.push({
+        text: slice.map(function(w){ return w.word; }).join(" ").trim(),
+        start: slice[0].start,
+        end: slice[slice.length-1].end
+      });
+    }
+    return chunks;
   }
 
   function fetchGeneratedVoice(text, voiceId){
@@ -5036,8 +5135,12 @@
       '<div id="lgVideoPreviewWrap" style="margin-top:10px;display:none">' +
         '<video id="lgVideoPreview" controls style="width:100%;max-width:360px;border-radius:10px;display:block"></video>' +
       '</div>' +
-      '<label style="margin-top:14px">Texto da fala (a legenda é gerada a partir daqui, em blocos de 4 palavras)</label>' +
-      '<textarea id="lgCaptionText" rows="4" placeholder="Cole aqui exatamente o que é falado no vídeo..."></textarea>' +
+      '<div class="form-actions" style="margin-top:14px">' +
+        '<button type="button" class="btn-primary btn-sm" id="lgTranscribeBtn" disabled>🎯 Transcrever automaticamente (sincroniza com a fala)</button>' +
+        '<span class="hint" id="lgSyncHint"></span>' +
+      '</div>' +
+      '<label style="margin-top:14px">Texto da fala (transcreva acima ou digite manualmente — em blocos de 4 palavras)</label>' +
+      '<textarea id="lgCaptionText" rows="4" placeholder="Cole aqui exatamente o que é falado no vídeo, ou clique em Transcrever automaticamente acima..."></textarea>' +
       '<div class="form-actions" style="margin-top:14px">' +
         '<button type="button" class="btn-primary gen-lote-btn" id="lgGenBtn" disabled>⬆️ Escolha um vídeo primeiro</button>' +
         '<span class="hint" id="lgHint"></span>' +
@@ -5047,13 +5150,27 @@
     var videoInput = formBlock.querySelector("#lgVideoInput");
     var previewWrap = formBlock.querySelector("#lgVideoPreviewWrap");
     var previewEl = formBlock.querySelector("#lgVideoPreview");
+    var transcribeBtn = formBlock.querySelector("#lgTranscribeBtn");
+    var syncHint = formBlock.querySelector("#lgSyncHint");
     var captionInput = formBlock.querySelector("#lgCaptionText");
     var genBtn = formBlock.querySelector("#lgGenBtn");
     var hint = formBlock.querySelector("#lgHint");
     var chosenFile = null;
+    var wordTimestamps = null;
+    var settingTextProgrammatically = false;
+
+    captionInput.addEventListener("input", function(){
+      if(settingTextProgrammatically) return;
+      if(wordTimestamps){
+        wordTimestamps = null;
+        syncHint.textContent = "Texto editado manualmente — a legenda volta a usar divisão automática (sem sincronia exata).";
+      }
+    });
 
     videoInput.addEventListener("change", function(e){
       chosenFile = e.target.files && e.target.files[0];
+      wordTimestamps = null;
+      syncHint.textContent = "";
       if(chosenFile){
         previewEl.src = URL.createObjectURL(chosenFile);
         previewWrap.style.display = "block";
@@ -5062,19 +5179,45 @@
       }
       genBtn.disabled = !chosenFile;
       genBtn.textContent = chosenFile ? "Gerar vídeo com legenda" : "⬆️ Escolha um vídeo primeiro";
+      transcribeBtn.disabled = !chosenFile;
       hint.textContent = "";
+    });
+
+    transcribeBtn.addEventListener("click", function(){
+      if(!chosenFile) return;
+      transcribeBtn.disabled = true;
+      syncHint.textContent = "Extraindo áudio do vídeo...";
+      extractAudioBlob(chosenFile).then(function(audioBlob){
+        syncHint.textContent = "Transcrevendo com IA (Whisper)...";
+        return fetchTranscription(audioBlob);
+      }).then(function(data){
+        settingTextProgrammatically = true;
+        captionInput.value = data.text || "";
+        settingTextProgrammatically = false;
+        wordTimestamps = (data.words && data.words.length) ? data.words : null;
+        syncHint.textContent = wordTimestamps
+          ? "✅ Transcrito e sincronizado com a fala (" + wordTimestamps.length + " palavras). Revise o texto se precisar."
+          : "Transcrito, mas sem timing detalhado — a legenda vai usar divisão automática.";
+        genBtn.disabled = false;
+        genBtn.textContent = "Gerar vídeo com legenda";
+      }).catch(function(err){
+        console.error(err);
+        syncHint.textContent = "Erro na transcrição: "+(err.message||err)+". Pode digitar a legenda manualmente abaixo.";
+      }).then(function(){
+        transcribeBtn.disabled = false;
+      });
     });
 
     genBtn.addEventListener("click", function(){
       if(!chosenFile) return;
       var captionText = captionInput.value.trim();
-      if(!captionText){ hint.textContent = "Cola o texto da fala primeiro."; return; }
-      genBtn.disabled = true; videoInput.disabled = true;
+      if(!captionText){ hint.textContent = "Cola o texto da fala primeiro (ou transcreve automaticamente)."; return; }
+      genBtn.disabled = true; videoInput.disabled = true; transcribeBtn.disabled = true;
       genBtn.textContent = "Gravando... 0%";
       hint.textContent = "";
       renderVideoWithCaptionsBlob(chosenFile, captionText, function(t){
         genBtn.textContent = "Gravando... "+Math.round(t*100)+"%";
-      }).then(function(result){
+      }, wordTimestamps).then(function(result){
         var blob = result.videoBlob;
         var ext = (blob.type||"").indexOf("mp4")>-1 ? ".mp4" : ".webm";
         var filename = sanitizeFilename(chosenFile.name.replace(/\.[^.]+$/,""))+"_legendado"+ext;
@@ -5083,7 +5226,7 @@
         console.error(err);
         hint.textContent = "Erro: "+(err.message||err);
       }).then(function(){
-        genBtn.disabled = false; videoInput.disabled = false;
+        genBtn.disabled = false; videoInput.disabled = false; transcribeBtn.disabled = false;
         genBtn.textContent = "Gerar vídeo com legenda";
       });
     });
