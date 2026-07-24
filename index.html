@@ -2655,13 +2655,14 @@
     return chunks;
   }
 
-  function drawVideoCaption(ctx, text, W, H, layout){
+  function drawVideoCaption(ctx, text, W, H, layout, yFraction){
     var maxWidth = W*0.8;
     ctx.font = "800 40px 'Arial Black', Arial, sans-serif";
     var lines = wrapCanvasText(ctx, text.toUpperCase(), maxWidth).slice(0,2);
     var lineH = 50;
     var barH = lines.length*lineH + 34;
-    var barY = H*0.5 - barH/2;
+    var centerY = H * (yFraction==null ? 0.5 : yFraction);
+    var barY = centerY - barH/2;
     ctx.save();
     ctx.fillStyle = "rgba(0,0,0,0.6)";
     var rx = 16, bx = W*0.08, bw = W*0.84;
@@ -3105,7 +3106,7 @@
           if(captionChunks.length){
             var chunkDur = duration/captionChunks.length;
             var idx = Math.min(Math.floor(elapsed/chunkDur), captionChunks.length-1);
-            drawVideoCaption(ctx, captionChunks[idx], W, H, null);
+            drawVideoCaption(ctx, captionChunks[idx], W, H, null, 0.78);
           }
           if(onProgress) onProgress(t);
           if(elapsed < duration && !videoEl.ended){
