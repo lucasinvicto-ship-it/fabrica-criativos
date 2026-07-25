@@ -3161,18 +3161,26 @@
         }).then(function(ctxObj){
           var inputName = ctxObj.inputName, overlays = ctxObj.overlays;
           var args = ["-i", inputName];
-          overlays.forEach(function(o){ args.push("-loop","1","-i", o.name); });
+          overlays.forEach(function(o){
+            var dur = Math.max(o.end - o.start, 0.05);
+            args.push("-loop","1","-t", dur.toFixed(3), "-i", o.name);
+          });
 
           var outName = "output.mp4";
-          if(overlays.length){
+          if(overlays.length===1){
+            args.push("-filter_complex", "[0:v][1:v]overlay=x=0:y=0[vout]");
+            args.push("-map", "[vout]", "-map", "0:a?");
+          } else if(overlays.length>1){
+            // Concatena os quadros de legenda numa única trilha contínua primeiro,
+            // e só então faz UM overlay sobre o vídeo — encadear vários "overlay"
+            // seguidos (um dependendo do anterior) trava o processador nessa versão.
             var filterParts = [];
-            var lastLabel = "0:v";
             overlays.forEach(function(o, idx){
-              var isLast = idx===overlays.length-1;
-              var outLabel = isLast ? "vout" : ("v"+(idx+1));
-              filterParts.push("["+lastLabel+"]["+(idx+1)+":v]overlay=enable='between(t,"+o.start.toFixed(3)+","+o.end.toFixed(3)+")'["+outLabel+"]");
-              lastLabel = outLabel;
+              filterParts.push("["+(idx+1)+":v]setpts=PTS-STARTPTS[c"+idx+"]");
             });
+            var concatInputs = overlays.map(function(o, idx){ return "[c"+idx+"]"; }).join("");
+            filterParts.push(concatInputs+"concat=n="+overlays.length+":v=1:a=0[captrack]");
+            filterParts.push("[0:v][captrack]overlay=x=0:y=0[vout]");
             args.push("-filter_complex", filterParts.join(";"));
             args.push("-map", "[vout]", "-map", "0:a?");
           }
