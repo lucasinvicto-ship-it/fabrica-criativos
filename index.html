@@ -3161,7 +3161,7 @@
         }).then(function(ctxObj){
           var inputName = ctxObj.inputName, overlays = ctxObj.overlays;
           var args = ["-i", inputName];
-          overlays.forEach(function(o){ args.push("-i", o.name); });
+          overlays.forEach(function(o){ args.push("-loop","1","-i", o.name); });
 
           var outName = "output.mp4";
           if(overlays.length){
@@ -3176,7 +3176,7 @@
             args.push("-filter_complex", filterParts.join(";"));
             args.push("-map", "[vout]", "-map", "0:a?");
           }
-          args.push("-c:v","libx264","-preset","veryfast","-crf","20","-c:a","aac","-b:a","192k","-movflags","+faststart",outName);
+          args.push("-c:v","libx264","-preset","veryfast","-crf","20","-c:a","aac","-b:a","192k","-movflags","+faststart","-shortest",outName);
 
           if(onProgress){
             ffmpeg.setProgress(function(p){
