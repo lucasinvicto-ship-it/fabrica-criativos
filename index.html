@@ -3099,16 +3099,13 @@
     });
   }
 
-  function renderCaptionOverlayPng(text, W, H, styleKey){
-    var canvas = document.createElement("canvas");
-    canvas.width = W; canvas.height = H;
-    var ctx = canvas.getContext("2d");
-    drawVideoCaption(ctx, text, W, H, null, 0.78, styleKey);
-    return new Promise(function(resolve){
-      canvas.toBlob(function(blob){ resolve(blob); }, "image/png");
-    });
-  }
-
+  // Renderiza só a caixinha da legenda (não o quadro inteiro do vídeo) numa altura
+  // fixa de 2 linhas — bem mais leve pra compor no vídeo do que uma imagem do
+  // tamanho inteiro (quase toda transparente) em cada trecho de legenda.
+  // Extrai o vídeo como uma sequência de quadros já com a legenda desenhada em cima
+  // (mesmo desenho de canvas que já funcionava bem visualmente), e só usa o ffmpeg
+  // pra costurar esses quadros prontos + o áudio original — nada de filter_complex
+  // com múltiplas imagens, que travava o processador nessa versão do ffmpeg.wasm.
   function renderVideoWithCaptionsBlob(videoFile, captionText, onProgress, styleKey){
     return new Promise(function(resolve, reject){
       var videoUrl = URL.createObjectURL(videoFile);
@@ -3116,6 +3113,7 @@
       videoEl.src = videoUrl;
       videoEl.muted = true;
       videoEl.playsInline = true;
+      videoEl.preload = "auto";
 
       var cleaned = false;
       function cleanupUrl(){ if(cleaned) return; cleaned = true; URL.revokeObjectURL(videoUrl); }
@@ -3128,68 +3126,81 @@
       videoEl.addEventListener("loadedmetadata", function(){
         var W = videoEl.videoWidth, H = videoEl.videoHeight;
         var duration = Math.min(videoEl.duration || 60, 90);
-        cleanupUrl();
-        if(!W || !H){ reject(new Error("Não consegui ler as dimensões do vídeo.")); return; }
-        if(!isFinite(duration) || duration<=0){ reject(new Error("Vídeo sem duração válida.")); return; }
+        if(!W || !H){ cleanupUrl(); reject(new Error("Não consegui ler as dimensões do vídeo.")); return; }
+        if(!isFinite(duration) || duration<=0){ cleanupUrl(); reject(new Error("Vídeo sem duração válida.")); return; }
 
         var captionChunks = captionText ? buildCaptionChunks(captionText) : [];
         var chunkDur = captionChunks.length ? duration/captionChunks.length : duration;
+        var fps = 24;
+        var totalFrames = Math.max(1, Math.round(duration*fps));
+        var canvas = document.createElement("canvas");
+        canvas.width = W; canvas.height = H;
+        var ctx = canvas.getContext("2d");
         var ffmpeg = null;
+
+        function seekTo(t){
+          return new Promise(function(res){
+            function onSeeked(){ videoEl.removeEventListener("seeked", onSeeked); res(); }
+            videoEl.addEventListener("seeked", onSeeked);
+            videoEl.currentTime = Math.min(t, Math.max(duration-0.02, 0));
+          });
+        }
+
+        function extractFrames(){
+          var chain = Promise.resolve();
+          var _loop = function(f){
+            chain = chain.then(function(){ return seekTo(f/fps); }).then(function(){
+              ctx.drawImage(videoEl, 0, 0, W, H);
+              if(captionChunks.length){
+                var idx = Math.min(Math.floor((f/fps)/chunkDur), captionChunks.length-1);
+                drawVideoCaption(ctx, captionChunks[idx], W, H, null, 0.78, styleKey);
+              }
+              if(onProgress) onProgress(0.05 + (f/totalFrames)*0.55);
+              return new Promise(function(res2){
+                canvas.toBlob(function(blob){
+                  blob.arrayBuffer().then(function(buf){
+                    var name = "frame_"+String(f).padStart(5,"0")+".jpg";
+                    ffmpeg.FS("writeFile", name, new Uint8Array(buf));
+                    res2();
+                  });
+                }, "image/jpeg", 0.92);
+              });
+            });
+          };
+          for(var f=0; f<totalFrames; f++){ _loop(f); }
+          return chain;
+        }
 
         if(onProgress) onProgress(0.02);
 
         getFFmpeg().then(function(fm){
           ffmpeg = fm;
-          if(onProgress) onProgress(0.08);
+          if(onProgress) onProgress(0.05);
           return window.FFmpeg.fetchFile(videoFile);
         }).then(function(inputData){
           var extMatch = (videoFile.name||"").match(/\.[a-zA-Z0-9]+$/);
           var inputName = "input" + (extMatch ? extMatch[0] : ".mp4");
           ffmpeg.FS("writeFile", inputName, inputData);
-
-          return Promise.all(captionChunks.map(function(text, idx){
-            return renderCaptionOverlayPng(text, W, H, styleKey).then(function(blob){
-              return blob.arrayBuffer();
-            }).then(function(buf){
-              var name = "cap_"+idx+".png";
-              ffmpeg.FS("writeFile", name, new Uint8Array(buf));
-              return { name: name, start: idx*chunkDur, end: Math.min((idx+1)*chunkDur, duration) };
-            });
-          })).then(function(overlays){
-            return { inputName: inputName, overlays: overlays };
+          return extractFrames().then(function(){
+            cleanupUrl();
+            return inputName;
           });
-        }).then(function(ctxObj){
-          var inputName = ctxObj.inputName, overlays = ctxObj.overlays;
-          var args = ["-i", inputName];
-          overlays.forEach(function(o){
-            var dur = Math.max(o.end - o.start, 0.05);
-            args.push("-loop","1","-t", dur.toFixed(3), "-i", o.name);
-          });
-
+        }).then(function(inputName){
           var outName = "output.mp4";
-          if(overlays.length===1){
-            args.push("-filter_complex", "[0:v][1:v]overlay=x=0:y=0[vout]");
-            args.push("-map", "[vout]", "-map", "0:a?");
-          } else if(overlays.length>1){
-            // Concatena os quadros de legenda numa única trilha contínua primeiro,
-            // e só então faz UM overlay sobre o vídeo — encadear vários "overlay"
-            // seguidos (um dependendo do anterior) trava o processador nessa versão.
-            var filterParts = [];
-            overlays.forEach(function(o, idx){
-              filterParts.push("["+(idx+1)+":v]setpts=PTS-STARTPTS[c"+idx+"]");
-            });
-            var concatInputs = overlays.map(function(o, idx){ return "[c"+idx+"]"; }).join("");
-            filterParts.push(concatInputs+"concat=n="+overlays.length+":v=1:a=0[captrack]");
-            filterParts.push("[0:v][captrack]overlay=x=0:y=0[vout]");
-            args.push("-filter_complex", filterParts.join(";"));
-            args.push("-map", "[vout]", "-map", "0:a?");
-          }
-          args.push("-c:v","libx264","-preset","veryfast","-crf","20","-c:a","aac","-b:a","192k","-movflags","+faststart","-shortest",outName);
+          var args = [
+            "-framerate", String(fps), "-i", "frame_%05d.jpg",
+            "-i", inputName,
+            "-map", "0:v", "-map", "1:a?",
+            "-c:v","libx264","-preset","ultrafast","-crf","23",
+            "-c:a","aac","-b:a","192k",
+            "-pix_fmt","yuv420p","-movflags","+faststart","-shortest",
+            outName
+          ];
 
           if(onProgress){
             ffmpeg.setProgress(function(p){
               var ratio = (p && typeof p.ratio === "number") ? p.ratio : 0;
-              onProgress(0.1 + Math.min(Math.max(ratio,0),1)*0.85);
+              onProgress(0.6 + Math.min(Math.max(ratio,0),1)*0.35);
             });
           }
 
@@ -3197,16 +3208,17 @@
           return withTimeout(
             ffmpeg.run.apply(ffmpeg, args),
             240000,
-            "O processamento travou por mais de 4 minutos (provavelmente o formato/codec desse vídeo específico ou o tamanho dele não é compatível com o processador dentro do navegador). Últimas linhas do processador: " + ffmpegLogBuffer.slice(-8).join(" | ")
+            "A montagem final travou por mais de 4 minutos. Últimas linhas do processador: " + ffmpegLogBuffer.slice(-8).join(" | ")
           ).then(function(){
             var data = ffmpeg.FS("readFile", outName);
             try{ ffmpeg.FS("unlink", inputName); }catch(e){}
-            overlays.forEach(function(o){ try{ ffmpeg.FS("unlink", o.name); }catch(e){} });
+            for(var f=0; f<totalFrames; f++){ try{ ffmpeg.FS("unlink", "frame_"+String(f).padStart(5,"0")+".jpg"); }catch(e){} }
             try{ ffmpeg.FS("unlink", outName); }catch(e){}
             if(onProgress) onProgress(1);
             resolve({ videoBlob: new Blob([data], {type:"video/mp4"}) });
           });
         }).catch(function(err){
+          cleanupUrl();
           var baseMsg = (err && err.message) || String(err || "Erro ao processar vídeo");
           if(ffmpegLogBuffer.length && baseMsg.indexOf("Últimas linhas")===-1){
             baseMsg += " — Últimas linhas do processador: " + ffmpegLogBuffer.slice(-8).join(" | ");
