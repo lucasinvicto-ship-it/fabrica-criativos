@@ -3229,6 +3229,156 @@
     });
   }
 
+  // ---- Checagem/correção de bitrate mínimo pra plataformas de anúncio (Kwai/Meta/TikTok
+  // costumam exigir vídeo >= 516kbps e áudio >= 64kbps, senão recusam o upload) ----
+  var MIN_VIDEO_BITRATE = 516000;
+  var MIN_AUDIO_BITRATE = 64000;
+
+  function parseStreamInfoFromLog(lines){
+    var duration = null, videoBitrate = null, audioBitrate = null;
+    lines.forEach(function(line){
+      var md = line.match(/Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)/);
+      if(md) duration = (+md[1])*3600 + (+md[2])*60 + parseFloat(md[3]);
+      if(videoBitrate===null && /Video:/.test(line)){
+        var mv = line.match(/(\d+)\s*kb\/s/);
+        if(mv) videoBitrate = parseInt(mv[1],10)*1000;
+      }
+      if(audioBitrate===null && /Audio:/.test(line)){
+        var ma = line.match(/(\d+)\s*kb\/s/);
+        if(ma) audioBitrate = parseInt(ma[1],10)*1000;
+      }
+    });
+    return { duration:duration, videoBitrate:videoBitrate, audioBitrate:audioBitrate };
+  }
+
+  // Gera um WAV de dither extremamente baixo — na casa do próprio ruído de
+  // quantização digital (inaudível, não é um "ruído" perceptível) — só pra dar
+  // entropia real a faixas de áudio totalmente mudas. Sem isso, silêncio digital
+  // puro (exatamente zero) comprime pra quase 0kbps não importa o bitrate alvo
+  // pedido ao encoder; a menor entropia não-zero já destrava o bitrate real.
+  function buildLowNoiseWav(durationSec, sampleRate, amplitude){
+    sampleRate = sampleRate || 44100;
+    amplitude = amplitude || 0.0002;
+    var numChannels = 2;
+    var numSamples = Math.max(1, Math.ceil(durationSec*sampleRate));
+    var blockAlign = numChannels*2;
+    var dataSize = numSamples*blockAlign;
+    var buffer = new ArrayBuffer(44+dataSize);
+    var view = new DataView(buffer);
+    function writeStr(offset, str){ for(var i=0;i<str.length;i++) view.setUint8(offset+i, str.charCodeAt(i)); }
+    writeStr(0,"RIFF"); view.setUint32(4, 36+dataSize, true); writeStr(8,"WAVE");
+    writeStr(12,"fmt "); view.setUint32(16,16,true); view.setUint16(20,1,true);
+    view.setUint16(22,numChannels,true); view.setUint32(24,sampleRate,true);
+    view.setUint32(28,sampleRate*blockAlign,true); view.setUint16(32,blockAlign,true); view.setUint16(34,16,true);
+    writeStr(36,"data"); view.setUint32(40,dataSize,true);
+    var amp = Math.round(amplitude*32767);
+    var off = 44;
+    for(var i=0;i<numSamples;i++){
+      for(var c=0;c<numChannels;c++){
+        view.setInt16(off, Math.round((Math.random()*2-1)*amp), true);
+        off += 2;
+      }
+    }
+    return new Uint8Array(buffer);
+  }
+
+  // Verifica o bitrate real de vídeo/áudio e, se algum ficar abaixo do mínimo,
+  // reencoda só o que precisa (vídeo em CBR forçado, áudio com dither mínimo + AAC
+  // logo acima do piso exigido) — mantém intacto o que já passa.
+  function renderBitrateFixBlob(videoFile, onProgress){
+    return new Promise(function(resolve, reject){
+      var ffmpeg = null;
+      var written = [];
+      function cleanup(){
+        written.forEach(function(n){ try{ ffmpeg.FS("unlink", n); }catch(e){} });
+      }
+      if(onProgress) onProgress(0.02);
+      getFFmpeg().then(function(fm){
+        ffmpeg = fm;
+        if(onProgress) onProgress(0.05);
+        return window.FFmpeg.fetchFile(videoFile);
+      }).then(function(inputData){
+        var extMatch = (videoFile.name||"").match(/\.[a-zA-Z0-9]+$/);
+        var inputName = "bfin_" + Date.now() + "_" + Math.floor(Math.random()*1e6) + (extMatch?extMatch[0]:".mp4");
+        ffmpeg.FS("writeFile", inputName, inputData);
+        written.push(inputName);
+        if(onProgress) onProgress(0.1);
+        var startIdx = ffmpegLogBuffer.length;
+        return ffmpeg.run("-i", inputName).catch(function(){}).then(function(){
+          return { inputName: inputName, lines: ffmpegLogBuffer.slice(startIdx) };
+        });
+      }).then(function(probe){
+        var inputName = probe.inputName;
+        var info = parseStreamInfoFromLog(probe.lines);
+        var needsVideo = !info.videoBitrate || info.videoBitrate < MIN_VIDEO_BITRATE;
+        var needsAudio = !info.audioBitrate || info.audioBitrate < MIN_AUDIO_BITRATE;
+        if(onProgress) onProgress(0.15);
+
+        if(!needsVideo && !needsAudio){
+          cleanup();
+          return videoFile.arrayBuffer().then(function(buf){
+            return { bytes: new Uint8Array(buf), fixed:false, info:info };
+          });
+        }
+
+        var outName = "bfout_" + Date.now() + "_" + Math.floor(Math.random()*1e6) + ".mp4";
+        written.push(outName);
+        var args = ["-i", inputName];
+
+        if(needsAudio){
+          var noiseName = "bfnoise_" + Date.now() + "_" + Math.floor(Math.random()*1e6) + ".wav";
+          ffmpeg.FS("writeFile", noiseName, buildLowNoiseWav(info.duration || 60, 44100, 0.0002));
+          written.push(noiseName);
+          args = args.concat([
+            "-i", noiseName,
+            "-filter_complex", "[1:a]aformat=sample_rates=44100:channel_layouts=stereo[n];[0:a][n]amix=inputs=2:duration=first:dropout_transition=0[aout]",
+            "-map","0:v","-map","[aout]"
+          ]);
+        }
+
+        // Alvos logo acima do mínimo exigido pela plataforma (516kbps vídeo / 64kbps
+        // áudio) — margem só o suficiente pra cobrir variação do encoder, sem estourar
+        // o arquivo além do que foi pedido.
+        args = args.concat(needsVideo
+          ? ["-c:v","libx264","-b:v","600k","-minrate","600k","-maxrate","600k","-bufsize","600k","-x264-params","nal-hrd=cbr:force-cfr=1","-pix_fmt","yuv420p"]
+          : ["-c:v","copy"]);
+        args = args.concat(needsAudio
+          ? ["-c:a","aac","-b:a","80k","-ar","44100"]
+          : ["-c:a","copy"]);
+        args = args.concat(["-movflags","+faststart", outName]);
+
+        if(onProgress){
+          ffmpeg.setProgress(function(p){
+            var ratio = (p && typeof p.ratio === "number") ? p.ratio : 0;
+            onProgress(0.2 + Math.min(Math.max(ratio,0),1)*0.75);
+          });
+        }
+
+        ffmpegLogBuffer.length = 0;
+        return withTimeout(
+          ffmpeg.run.apply(ffmpeg, args),
+          180000,
+          "A correção de bitrate travou por mais de 3 minutos. Últimas linhas do processador: " + ffmpegLogBuffer.slice(-8).join(" | ")
+        ).then(function(){
+          var data = ffmpeg.FS("readFile", outName);
+          var bytes = new Uint8Array(data);
+          cleanup();
+          return { bytes: bytes, fixed:true, info:info, fixedVideo:needsVideo, fixedAudio:needsAudio };
+        });
+      }).then(function(result){
+        if(onProgress) onProgress(1);
+        resolve(result);
+      }).catch(function(err){
+        try{ cleanup(); }catch(e){}
+        var baseMsg = (err && err.message) || String(err || "Erro ao checar/corrigir o vídeo");
+        if(ffmpegLogBuffer.length && baseMsg.indexOf("Últimas linhas")===-1){
+          baseMsg += " — Últimas linhas do processador: " + ffmpegLogBuffer.slice(-8).join(" | ");
+        }
+        reject(new Error(baseMsg));
+      });
+    });
+  }
+
   function renderPosterVideoBlob(app, cre, audioFile, onProgress, captionText, externalImageUrl, forcedMotion, formatOverride){
     return new Promise(function(resolve, reject){
       if(!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream){
@@ -3637,6 +3787,7 @@
       var done = 0;
       var total = n*formats.length;
       var jobN = 0;
+      var firstError = null;
       for(var i=0;i<n;i++){
         formats.forEach(function(fmt){
           (function(i, fmt){
@@ -3665,7 +3816,10 @@
                   videoBlobsStore[cre.id] = { blob: blob, filename: creativeFilename(app, cre, i+1).replace(/\.png$/,ext), imageDataUrl: result.imageDataUrl };
                   done++;
                 }
-              }).catch(function(err){ console.error("Falha no vídeo "+thisJob, err); });
+              }).catch(function(err){
+                console.error("Falha no vídeo "+thisJob, err);
+                if(!firstError) firstError = err.message || String(err);
+              });
             });
           })(i, fmt);
         });
@@ -3674,8 +3828,7 @@
         if(cancelled) return;
         close();
         if(dualFormat){
-          var zipBlob = buildZip(zipFiles);
-          showZipModal(zipBlob, sanitizeFilename(app.name)+"_videos_story_e_quadrado.zip");
+          finishDualFormatZip(zipFiles, total, firstError, app, sanitizeFilename(app.name)+"_videos_story_e_quadrado.zip");
         } else {
           showBatchVideoDoneModal(app, done, n, false);
         }
@@ -3937,6 +4090,7 @@
       var done = 0;
       var total = n*formats.length;
       var jobN = 0;
+      var firstError = null;
       for(var i=0;i<n;i++){
         formats.forEach(function(fmt){
           (function(i, fmt){
@@ -3964,7 +4118,10 @@
                   videoBlobsStore[ext.id] = { blob: blob, filename: sanitizeFilename((i+1)+"_"+ext.name)+extn, imageDataUrl: result.imageDataUrl };
                   done++;
                 }
-              }).catch(function(err){ console.error("Falha no vídeo "+thisJob, err); });
+              }).catch(function(err){
+                console.error("Falha no vídeo "+thisJob, err);
+                if(!firstError) firstError = err.message || String(err);
+              });
             });
           })(i, fmt);
         });
@@ -3973,8 +4130,7 @@
         if(cancelled) return;
         close();
         if(dualFormat){
-          var zipBlob = buildZip(zipFiles);
-          showZipModal(zipBlob, sanitizeFilename(app.name)+"_externos_videos_story_e_quadrado.zip");
+          finishDualFormatZip(zipFiles, total, firstError, app, sanitizeFilename(app.name)+"_externos_videos_story_e_quadrado.zip");
         } else {
           showBatchVideoDoneModal(app, done, n, true);
         }
@@ -4111,6 +4267,18 @@
       var zipBlob = buildZip(files);
       showZipModal(zipBlob, sanitizeFilename(app.name)+"_externos_gifs.zip");
     });
+  }
+
+  function finishDualFormatZip(zipFiles, total, firstError, app, filename){
+    if(zipFiles.length===0){
+      alert("Nenhum vídeo foi gerado (0 de "+total+"). Motivo: "+(firstError||"erro desconhecido")+" — corrija e tente de novo antes de baixar o ZIP.");
+      return;
+    }
+    var zipBlob = buildZip(zipFiles);
+    showZipModal(zipBlob, filename);
+    if(zipFiles.length<total){
+      alert("Atenção: só "+zipFiles.length+" de "+total+" vídeo(s) entraram no ZIP. Falha em algum(ns): "+(firstError||"erro desconhecido"));
+    }
   }
 
   function showZipModal(blob, filename){
@@ -4252,6 +4420,7 @@
     { key:"novacampanha", icon:"+", label:"Nova campanha" },
     { key:"fabrica", icon:"✨", label:"Fábrica" },
     { key:"legendas", icon:"💬", label:"Legendas" },
+    { key:"bitrate", icon:"📶", label:"Bitrate" },
     { key:"metricas", icon:"📊", label:"Métricas" },
     { key:"subidas", icon:"⬆", label:"Subidas" },
     { key:"templates", icon:"▤", label:"Templates" },
@@ -4382,6 +4551,10 @@
     }
     if(state.navView==="legendas"){
       main.appendChild(buildLegendasPage());
+      return;
+    }
+    if(state.navView==="bitrate"){
+      main.appendChild(buildBitratePage());
       return;
     }
     if(state.navView && state.navView!=="fabrica"){
@@ -5295,6 +5468,107 @@
     return wrap;
   }
 
+  function buildBitratePage(){
+    var wrap = document.createElement("section");
+    wrap.className = "panel active config-page";
+    wrap.innerHTML =
+      '<h2 style="margin:0 0 4px">Bitrate</h2>' +
+      '<p class="hint" style="margin-bottom:20px">Sobe um ou vários vídeos e, com 1 clique, verifica se o bitrate de vídeo (mín. 516kbps) e de áudio (mín. 64kbps) passa nas exigências das plataformas de anúncio (Kwai/Meta/TikTok) — corrige automaticamente só o que não passar.</p>' +
+      '<div class="mock-banner">⚠️ Igual na aba Legendas: na primeira vez baixa o processador de vídeo (~25MB, fica salvo depois). Vídeos com áudio totalmente mudo recebem um dither na casa do próprio ruído de quantização digital (inaudível — não é um ruído perceptível) só pra ter uma faixa de áudio real; o alvo de bitrate fica só um pouco acima do mínimo pedido pela plataforma, sem exagero.</div>';
+
+    var formBlock = document.createElement("div");
+    formBlock.className = "config-block";
+    formBlock.innerHTML =
+      '<h3>Vídeos</h3>' +
+      '<label>Selecione um ou vários vídeos (mp4/webm/mov)</label>' +
+      '<input type="file" id="brVideoInput" accept="video/*" multiple />' +
+      '<div id="brFileList" style="margin-top:14px"></div>' +
+      '<div class="form-actions" style="margin-top:14px">' +
+        '<button type="button" class="btn-primary gen-lote-btn" id="brRunBtn" disabled>⬆️ Escolha os vídeos primeiro</button>' +
+        '<span class="hint" id="brHint"></span>' +
+      '</div>';
+    wrap.appendChild(formBlock);
+
+    var videoInput = formBlock.querySelector("#brVideoInput");
+    var fileListEl = formBlock.querySelector("#brFileList");
+    var runBtn = formBlock.querySelector("#brRunBtn");
+    var hint = formBlock.querySelector("#brHint");
+    var items = [];
+
+    var STATUS_LABELS = { pending:"aguardando", checking:"verificando...", ok:"✅ já estava ok", fixed:"🛠 corrigido", error:"⚠️ erro" };
+
+    function renderList(){
+      if(!items.length){ fileListEl.innerHTML = ""; return; }
+      fileListEl.innerHTML = items.map(function(it){
+        var label = STATUS_LABELS[it.status] || it.status;
+        return '<div class="config-list-item">' +
+          '<div><div class="name">'+xmlEscape(it.file.name)+'</div><div class="sub">'+xmlEscape(label)+(it.detail?(" · "+xmlEscape(it.detail)):"")+'</div></div>' +
+        '</div>';
+      }).join("");
+    }
+
+    videoInput.addEventListener("change", function(e){
+      var files = Array.prototype.slice.call(e.target.files || []);
+      items = files.map(function(f){ return { file:f, status:"pending", detail:"" }; });
+      renderList();
+      runBtn.disabled = !items.length;
+      runBtn.textContent = items.length ? ("🔎 Verificar e corrigir ("+items.length+")") : "⬆️ Escolha os vídeos primeiro";
+      hint.textContent = "";
+    });
+
+    runBtn.addEventListener("click", function(){
+      if(!items.length) return;
+      runBtn.disabled = true; videoInput.disabled = true;
+      hint.textContent = "";
+      var zipFiles = [];
+      var okCount = 0, fixedCount = 0, errCount = 0;
+      var chain = Promise.resolve();
+      items.forEach(function(it, idx){
+        chain = chain.then(function(){
+          it.status = "checking";
+          renderList();
+          runBtn.textContent = "Verificando "+(idx+1)+"/"+items.length+"... 0%";
+          return renderBitrateFixBlob(it.file, function(t){
+            runBtn.textContent = "Verificando "+(idx+1)+"/"+items.length+"... "+Math.round(t*100)+"%";
+          });
+        }).then(function(result){
+          if(result.fixed){
+            it.status = "fixed";
+            fixedCount++;
+            var parts = [];
+            if(result.fixedVideo) parts.push("vídeo");
+            if(result.fixedAudio) parts.push("áudio");
+            it.detail = "corrigido: "+parts.join(" + ");
+          } else {
+            it.status = "ok";
+            okCount++;
+            it.detail = "";
+          }
+          zipFiles.push({ name: it.file.name, data: result.bytes });
+          renderList();
+        }).catch(function(err){
+          console.error(err);
+          it.status = "error";
+          errCount++;
+          it.detail = (err.message||String(err)).slice(0,140);
+          renderList();
+        });
+      });
+      chain.then(function(){
+        if(zipFiles.length){
+          var zipBlob = buildZip(zipFiles);
+          showZipModal(zipBlob, "videos_bitrate_ok.zip");
+        }
+        hint.textContent = okCount+" já ok · "+fixedCount+" corrigido(s)"+(errCount?(" · "+errCount+" com erro"):"");
+      }).then(function(){
+        runBtn.disabled = false; videoInput.disabled = false;
+        runBtn.textContent = "🔎 Verificar e corrigir ("+items.length+")";
+      });
+    });
+
+    return wrap;
+  }
+
   function buildSimpleListBlock(cfg){
     var block = document.createElement("div");
     block.className = "config-block";
@@ -5670,16 +5944,20 @@
 
     var genBtn = formCard.querySelector("#genBtn");
     var capHint = formCard.querySelector("#capHint");
-    if(app.creatives.length>=MAX_CREATIVES){
+    var roomNow = MAX_CREATIVES - app.creatives.length;
+    if(roomNow<=0){
       genBtn.disabled = true;
-      capHint.textContent = "Limite de "+MAX_CREATIVES+" atingido — remova um do lote abaixo pra gerar outro.";
+      capHint.textContent = "Limite de "+MAX_CREATIVES+" atingido — exclua rejeitados ou remova um do lote abaixo pra gerar outro.";
+    } else if(roomNow<MAX_CREATIVES){
+      capHint.textContent = "Espaço pra mais "+roomNow+" (já tem "+app.creatives.length+" de "+MAX_CREATIVES+" no projeto, incluindo Rejeitados/Utilizados).";
     }
     genBtn.addEventListener("click", function(){
       var room = MAX_CREATIVES - app.creatives.length;
       if(room<=0) return;
       var qtdWanted = parseInt(formCard.querySelector("#fQtd").value, 10) || MAX_CREATIVES;
       var cap = Math.min(room, qtdWanted);
-      var lines = fBulk.value.split("\n").map(function(s){ return s.trim(); }).filter(Boolean).slice(0, cap);
+      var rawLines = fBulk.value.split("\n").map(function(s){ return s.trim(); }).filter(Boolean);
+      var lines = rawLines.slice(0, cap);
       lines.forEach(function(line, i){
         var parsed = parseBulkLine(line, fCorpo.value, fCta.value);
         var color = nextColor(app);
@@ -5687,6 +5965,9 @@
         var photo = app.photoLibrary.length ? app.photoLibrary[i % app.photoLibrary.length] : null;
         app.creatives.push(seedCreative(parsed.hook, parsed.corpo, fValor.value, parsed.cta, photo, color, fCardName.value, layout));
       });
+      if(rawLines.length>cap){
+        alert("Só coube "+cap+" de "+rawLines.length+" linha(s) — o projeto atingiu o limite de "+MAX_CREATIVES+" criativos (contando Rejeitados/Utilizados). Exclua rejeitados pra liberar espaço.");
+      }
       save(); renderPanels();
     });
 
@@ -5776,7 +6057,9 @@
             return '<button type="button" class="review-tab-btn'+(s===activeReviewTab?" active":"")+'" data-tab="'+s+'">'+reviewStatusLabel(s)+' <span class="cnt">'+cnt+'</span></button>';
           }).join("") +
         '</div>' +
-        '<div class="review-hint">Rejeitar move o criativo pra "Rejeitados"; aprovar move pra "Utilizados". A aba "Ativos" fica só com o que falta revisar.</div>' +
+        '<div class="review-hint">Rejeitar move o criativo pra "Rejeitados"; aprovar move pra "Utilizados". A aba "Ativos" fica só com o que falta revisar. Atenção: rejeitado/utilizado continua contando pro limite de '+MAX_CREATIVES+' criativos do projeto — use "Excluir rejeitados" pra liberar espaço de verdade.</div>' +
+        (app.creatives.some(function(c){ return c.reviewStatus==="rejeitado"; }) ?
+          '<button type="button" class="btn-sm" id="rmRejeitadosBtn" style="margin-bottom:8px">🗑️ Excluir rejeitados ('+app.creatives.filter(function(c){ return c.reviewStatus==="rejeitado"; }).length+')</button>' : '') +
         '<div class="bulk-bar" id="bulkBar">' +
           '<span>Ação em massa: <span class="bulk-count" id="bulkCount">0</span> selecionado(s)</span>' +
           '<button type="button" class="link-btn" id="selectAllBtn">selecionar todos</button>' +
@@ -5861,6 +6144,16 @@
           var count = app.creatives.filter(function(c){ return c.status==="pausado"; }).length;
           if(!confirm("Remover "+count+" criativo(s) marcado(s) como Pausado? Não dá pra desfazer.")) return;
           app.creatives = app.creatives.filter(function(c){ return c.status!=="pausado"; });
+          save(); renderPanels();
+        });
+      }
+
+      var rmRejeitadosBtn = galleryBlock.querySelector("#rmRejeitadosBtn");
+      if(rmRejeitadosBtn){
+        rmRejeitadosBtn.addEventListener("click", function(){
+          var count = app.creatives.filter(function(c){ return c.reviewStatus==="rejeitado"; }).length;
+          if(!confirm("Excluir "+count+" criativo(s) rejeitado(s) de vez? Isso libera espaço no limite de "+MAX_CREATIVES+", mas não dá pra desfazer.")) return;
+          app.creatives = app.creatives.filter(function(c){ return c.reviewStatus!=="rejeitado"; });
           save(); renderPanels();
         });
       }
