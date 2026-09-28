@@ -3241,39 +3241,55 @@
   // já é recusado). A folga que sobra cobre só arredondamento de dimensão par.
   var RATIO_TOLERANCE = 0.002;
 
+  // Bitrate ainda vem do log de texto do ffmpeg (formato "NNN kb/s" é estável entre
+  // versões). Se não conseguir extrair, videoBitrate/audioBitrate ficam null — e como
+  // "!info.videoBitrate" é truthy nesse caso, o código abaixo já trata como "precisa
+  // corrigir" (nunca deixa passar batido por falha de parsing).
   function parseStreamInfoFromLog(lines){
     var duration = null, videoBitrate = null, audioBitrate = null;
-    var width = null, height = null, dar = null;
     lines.forEach(function(line){
       var md = line.match(/Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)/);
       if(md) duration = (+md[1])*3600 + (+md[2])*60 + parseFloat(md[3]);
-      if(/Video:/.test(line)){
-        if(videoBitrate===null){
-          var mv = line.match(/(\d+)\s*kb\/s/);
-          if(mv) videoBitrate = parseInt(mv[1],10)*1000;
-        }
-        if(width===null){
-          var mdim = line.match(/[,\s](\d{2,5})x(\d{2,5})[,\s\[]/);
-          if(mdim){ width = parseInt(mdim[1],10); height = parseInt(mdim[2],10); }
-        }
-        if(dar===null){
-          var mdar = line.match(/DAR\s+(\d+):(\d+)/);
-          if(mdar && +mdar[2]) dar = (+mdar[1])/(+mdar[2]);
-        }
+      if(videoBitrate===null && /Video:/.test(line)){
+        var mv = line.match(/(\d+)\s*kb\/s/);
+        if(mv) videoBitrate = parseInt(mv[1],10)*1000;
       }
       if(audioBitrate===null && /Audio:/.test(line)){
         var ma = line.match(/(\d+)\s*kb\/s/);
         if(ma) audioBitrate = parseInt(ma[1],10)*1000;
       }
     });
-    return { duration:duration, videoBitrate:videoBitrate, audioBitrate:audioBitrate,
-             width:width, height:height, dar:dar };
+    return { duration:duration, videoBitrate:videoBitrate, audioBitrate:audioBitrate };
   }
 
-  // A plataforma enxerga a proporção de exibição (DAR), que pode diferir de
-  // largura/altura quando o pixel não é quadrado — por isso o DAR tem prioridade.
+  // Largura/altura vêm da decodificação real do vídeo pelo navegador (elemento
+  // <video>, já usado noutras partes do app), não de parsing de texto de log do
+  // ffmpeg.wasm — esse log varia de formato entre builds e, se o regex não casasse,
+  // a checagem de proporção ficava sem saber a proporção e silenciosamente não
+  // corrigia nada (bug real: vídeo saía "aprovado" sem nunca ter sido reenquadrado).
+  function probeVideoDims(file){
+    return new Promise(function(resolve, reject){
+      var url = URL.createObjectURL(file);
+      var v = document.createElement("video");
+      v.preload = "metadata";
+      v.muted = true;
+      v.src = url;
+      function cleanup(){ URL.revokeObjectURL(url); }
+      v.addEventListener("loadedmetadata", function(){
+        var w = v.videoWidth, h = v.videoHeight, dur = v.duration;
+        cleanup();
+        if(!w || !h){ reject(new Error("Não consegui ler as dimensões do vídeo.")); return; }
+        resolve({ width:w, height:h, duration: (isFinite(dur) && dur>0) ? dur : null });
+      });
+      v.addEventListener("error", function(){
+        cleanup();
+        reject(new Error("Não consegui carregar esse vídeo pra checar a proporção."));
+      });
+    });
+  }
+
   function aspectPlanFor(info){
-    var ratio = info.dar || (info.width && info.height ? info.width/info.height : null);
+    var ratio = (info.width && info.height) ? info.width/info.height : null;
     if(!ratio) return null;
     var portrait = ratio <= 1;
     var target = portrait ? PORTRAIT_RATIO : LANDSCAPE_RATIO;
@@ -3339,7 +3355,11 @@
         written.forEach(function(n){ try{ ffmpeg.FS("unlink", n); }catch(e){} });
       }
       if(onProgress) onProgress(0.02);
-      getFFmpeg().then(function(fm){
+      var videoDims = null;
+      probeVideoDims(videoFile).then(function(dims){
+        videoDims = dims;
+        return getFFmpeg();
+      }).then(function(fm){
         ffmpeg = fm;
         if(onProgress) onProgress(0.05);
         return window.FFmpeg.fetchFile(videoFile);
@@ -3356,6 +3376,9 @@
       }).then(function(probe){
         var inputName = probe.inputName;
         var info = parseStreamInfoFromLog(probe.lines);
+        info.width = videoDims.width;
+        info.height = videoDims.height;
+        info.duration = videoDims.duration || info.duration;
         var needsVideo = !info.videoBitrate || info.videoBitrate < MIN_VIDEO_BITRATE;
         var needsAudio = !info.audioBitrate || info.audioBitrate < MIN_AUDIO_BITRATE;
         var aspect = aspectPlanFor(info);
