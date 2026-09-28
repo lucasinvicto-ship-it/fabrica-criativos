@@ -3236,10 +3236,6 @@
   var MIN_AUDIO_BITRATE = 64000;
   var PORTRAIT_RATIO = 9/16;
   var LANDSCAPE_RATIO = 16/9;
-  // Quanto a proporção pode desviar do alvo antes de precisar corrigir. Apertado de
-  // propósito: a plataforma recusa por diferenças pequenas (1080x1912 erra só 0,4% e
-  // já é recusado). A folga que sobra cobre só arredondamento de dimensão par.
-  var RATIO_TOLERANCE = 0.002;
 
   // Bitrate ainda vem do log de texto do ffmpeg (formato "NNN kb/s" é estável entre
   // versões). Se não conseguir extrair, videoBitrate/audioBitrate ficam null — e como
@@ -3288,15 +3284,18 @@
     });
   }
 
+  // A plataforma não dá margem nenhuma: exige a proporção exata, não "perto de".
+  // Um vídeo 544x968 erra o 9:16 por só 0,09% e ainda assim é recusado — por isso a
+  // checagem é igualdade exata via multiplicação cruzada (sem ponto flutuante, sem
+  // tolerância), não uma comparação "razoavelmente perto".
   function aspectPlanFor(info){
-    var ratio = (info.width && info.height) ? info.width/info.height : null;
-    if(!ratio) return null;
-    var portrait = ratio <= 1;
-    var target = portrait ? PORTRAIT_RATIO : LANDSCAPE_RATIO;
-    var ok = Math.abs(ratio-target)/target <= RATIO_TOLERANCE;
+    var w = info.width, h = info.height;
+    if(!w || !h) return null;
+    var portrait = w <= h;
+    var ok = portrait ? (w*16 === h*9) : (w*9 === h*16);
     return {
       ok: ok,
-      ratio: ratio,
+      ratio: w/h,
       outWidth: portrait ? 1080 : 1920,
       outHeight: portrait ? 1920 : 1080,
       label: portrait ? "9:16" : "16:9"
