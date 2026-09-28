@@ -3229,26 +3229,72 @@
     });
   }
 
-  // ---- Checagem/correção de bitrate mínimo pra plataformas de anúncio (Kwai/Meta/TikTok
-  // costumam exigir vídeo >= 516kbps e áudio >= 64kbps, senão recusam o upload) ----
+  // ---- Checagem/correção do que as plataformas de anúncio (Kwai/Meta/TikTok) exigem
+  // pra aceitar o upload: bitrate mínimo (vídeo >= 516kbps, áudio >= 64kbps) e
+  // proporção exata (retrato 9:16, paisagem 16:9) ----
   var MIN_VIDEO_BITRATE = 516000;
   var MIN_AUDIO_BITRATE = 64000;
+  var PORTRAIT_RATIO = 9/16;
+  var LANDSCAPE_RATIO = 16/9;
+  // Quanto a proporção pode desviar do alvo antes de precisar corrigir. Apertado de
+  // propósito: a plataforma recusa por diferenças pequenas (1080x1912 erra só 0,4% e
+  // já é recusado). A folga que sobra cobre só arredondamento de dimensão par.
+  var RATIO_TOLERANCE = 0.002;
 
   function parseStreamInfoFromLog(lines){
     var duration = null, videoBitrate = null, audioBitrate = null;
+    var width = null, height = null, dar = null;
     lines.forEach(function(line){
       var md = line.match(/Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)/);
       if(md) duration = (+md[1])*3600 + (+md[2])*60 + parseFloat(md[3]);
-      if(videoBitrate===null && /Video:/.test(line)){
-        var mv = line.match(/(\d+)\s*kb\/s/);
-        if(mv) videoBitrate = parseInt(mv[1],10)*1000;
+      if(/Video:/.test(line)){
+        if(videoBitrate===null){
+          var mv = line.match(/(\d+)\s*kb\/s/);
+          if(mv) videoBitrate = parseInt(mv[1],10)*1000;
+        }
+        if(width===null){
+          var mdim = line.match(/[,\s](\d{2,5})x(\d{2,5})[,\s\[]/);
+          if(mdim){ width = parseInt(mdim[1],10); height = parseInt(mdim[2],10); }
+        }
+        if(dar===null){
+          var mdar = line.match(/DAR\s+(\d+):(\d+)/);
+          if(mdar && +mdar[2]) dar = (+mdar[1])/(+mdar[2]);
+        }
       }
       if(audioBitrate===null && /Audio:/.test(line)){
         var ma = line.match(/(\d+)\s*kb\/s/);
         if(ma) audioBitrate = parseInt(ma[1],10)*1000;
       }
     });
-    return { duration:duration, videoBitrate:videoBitrate, audioBitrate:audioBitrate };
+    return { duration:duration, videoBitrate:videoBitrate, audioBitrate:audioBitrate,
+             width:width, height:height, dar:dar };
+  }
+
+  // A plataforma enxerga a proporção de exibição (DAR), que pode diferir de
+  // largura/altura quando o pixel não é quadrado — por isso o DAR tem prioridade.
+  function aspectPlanFor(info){
+    var ratio = info.dar || (info.width && info.height ? info.width/info.height : null);
+    if(!ratio) return null;
+    var portrait = ratio <= 1;
+    var target = portrait ? PORTRAIT_RATIO : LANDSCAPE_RATIO;
+    var ok = Math.abs(ratio-target)/target <= RATIO_TOLERANCE;
+    return {
+      ok: ok,
+      ratio: ratio,
+      outWidth: portrait ? 1080 : 1920,
+      outHeight: portrait ? 1920 : 1080,
+      label: portrait ? "9:16" : "16:9"
+    };
+  }
+
+  function aspectVideoFilter(plan, fitMode){
+    var box = plan.outWidth + ":" + plan.outHeight;
+    // "cover" reenquadra preenchendo a tela (corta as sobras); "contain" encaixa o
+    // vídeo inteiro e completa o resto com barras pretas.
+    var scaleAndFit = fitMode === "contain"
+      ? "scale=" + box + ":force_original_aspect_ratio=decrease,pad=" + box + ":(ow-iw)/2:(oh-ih)/2:black"
+      : "scale=" + box + ":force_original_aspect_ratio=increase,crop=" + box;
+    return scaleAndFit + ",setsar=1";
   }
 
   // Gera um WAV de dither extremamente baixo — na casa do próprio ruído de
@@ -3285,7 +3331,7 @@
   // Verifica o bitrate real de vídeo/áudio e, se algum ficar abaixo do mínimo,
   // reencoda só o que precisa (vídeo em CBR forçado, áudio com dither mínimo + AAC
   // logo acima do piso exigido) — mantém intacto o que já passa.
-  function renderBitrateFixBlob(videoFile, onProgress){
+  function renderBitrateFixBlob(videoFile, onProgress, fitMode){
     return new Promise(function(resolve, reject){
       var ffmpeg = null;
       var written = [];
@@ -3312,9 +3358,11 @@
         var info = parseStreamInfoFromLog(probe.lines);
         var needsVideo = !info.videoBitrate || info.videoBitrate < MIN_VIDEO_BITRATE;
         var needsAudio = !info.audioBitrate || info.audioBitrate < MIN_AUDIO_BITRATE;
+        var aspect = aspectPlanFor(info);
+        var needsAspect = !!(aspect && !aspect.ok);
         if(onProgress) onProgress(0.15);
 
-        if(!needsVideo && !needsAudio){
+        if(!needsVideo && !needsAudio && !needsAspect){
           cleanup();
           return videoFile.arrayBuffer().then(function(buf){
             return { bytes: new Uint8Array(buf), fixed:false, info:info };
@@ -3324,24 +3372,37 @@
         var outName = "bfout_" + Date.now() + "_" + Math.floor(Math.random()*1e6) + ".mp4";
         written.push(outName);
         var args = ["-i", inputName];
+        var vFilter = needsAspect ? aspectVideoFilter(aspect, fitMode) : null;
 
         if(needsAudio){
           var noiseName = "bfnoise_" + Date.now() + "_" + Math.floor(Math.random()*1e6) + ".wav";
           ffmpeg.FS("writeFile", noiseName, buildLowNoiseWav(info.duration || 60, 44100, 0.0002));
           written.push(noiseName);
-          args = args.concat([
-            "-i", noiseName,
-            "-filter_complex", "[1:a]aformat=sample_rates=44100:channel_layouts=stereo[n];[0:a][n]amix=inputs=2:duration=first:dropout_transition=0[aout]",
-            "-map","0:v","-map","[aout]"
-          ]);
+          var audioChain = "[1:a]aformat=sample_rates=44100:channel_layouts=stereo[n];[0:a][n]amix=inputs=2:duration=first:dropout_transition=0[aout]";
+          args = args.concat(["-i", noiseName]);
+          if(vFilter){
+            args = args.concat([
+              "-filter_complex", "[0:v]" + vFilter + "[vout];" + audioChain,
+              "-map","[vout]","-map","[aout]"
+            ]);
+          } else {
+            args = args.concat(["-filter_complex", audioChain, "-map","0:v","-map","[aout]"]);
+          }
+        } else if(vFilter){
+          args = args.concat(["-vf", vFilter]);
         }
 
-        // Alvos logo acima do mínimo exigido pela plataforma (516kbps vídeo / 64kbps
-        // áudio) — margem só o suficiente pra cobrir variação do encoder, sem estourar
-        // o arquivo além do que foi pedido.
-        args = args.concat(needsVideo
-          ? ["-c:v","libx264","-b:v","600k","-minrate","600k","-maxrate","600k","-bufsize","600k","-x264-params","nal-hrd=cbr:force-cfr=1","-pix_fmt","yuv420p"]
-          : ["-c:v","copy"]);
+        // Sempre que o vídeo for reencodado (por bitrate baixo ou pra ajustar a
+        // proporção) usa CBR pra garantir o piso de 516kbps: reencodar por qualidade
+        // constante derruba o bitrate e reprova um vídeo que antes passava. Quando o
+        // original já era bom, mantém o bitrate dele pra não perder qualidade.
+        if(needsVideo || vFilter){
+          var targetKbps = Math.round(Math.min(Math.max(info.videoBitrate||0, 600000), 6000000)/1000) + "k";
+          args = args.concat(["-c:v","libx264","-b:v",targetKbps,"-minrate",targetKbps,"-maxrate",targetKbps,
+                              "-bufsize",targetKbps,"-x264-params","nal-hrd=cbr:force-cfr=1","-pix_fmt","yuv420p"]);
+        } else {
+          args = args.concat(["-c:v","copy"]);
+        }
         args = args.concat(needsAudio
           ? ["-c:a","aac","-b:a","80k","-ar","44100"]
           : ["-c:a","copy"]);
@@ -3358,12 +3419,14 @@
         return withTimeout(
           ffmpeg.run.apply(ffmpeg, args),
           180000,
-          "A correção de bitrate travou por mais de 3 minutos. Últimas linhas do processador: " + ffmpegLogBuffer.slice(-8).join(" | ")
+          "A correção travou por mais de 3 minutos. Últimas linhas do processador: " + ffmpegLogBuffer.slice(-8).join(" | ")
         ).then(function(){
           var data = ffmpeg.FS("readFile", outName);
           var bytes = new Uint8Array(data);
           cleanup();
-          return { bytes: bytes, fixed:true, info:info, fixedVideo:needsVideo, fixedAudio:needsAudio };
+          return { bytes: bytes, fixed:true, info:info, fixedVideo:needsVideo,
+                   fixedAudio:needsAudio, fixedAspect:needsAspect,
+                   aspectLabel: needsAspect ? aspect.label : null };
         });
       }).then(function(result){
         if(onProgress) onProgress(1);
@@ -5473,8 +5536,8 @@
     wrap.className = "panel active config-page";
     wrap.innerHTML =
       '<h2 style="margin:0 0 4px">Bitrate</h2>' +
-      '<p class="hint" style="margin-bottom:20px">Sobe um ou vários vídeos e, com 1 clique, verifica se o bitrate de vídeo (mín. 516kbps) e de áudio (mín. 64kbps) passa nas exigências das plataformas de anúncio (Kwai/Meta/TikTok) — corrige automaticamente só o que não passar.</p>' +
-      '<div class="mock-banner">⚠️ Igual na aba Legendas: na primeira vez baixa o processador de vídeo (~25MB, fica salvo depois). Vídeos com áudio totalmente mudo recebem um dither na casa do próprio ruído de quantização digital (inaudível — não é um ruído perceptível) só pra ter uma faixa de áudio real; o alvo de bitrate fica só um pouco acima do mínimo pedido pela plataforma, sem exagero.</div>';
+      '<p class="hint" style="margin-bottom:20px">Sobe um ou vários vídeos e, com 1 clique, verifica o que as plataformas de anúncio (Kwai/Meta/TikTok) exigem pra aceitar o upload: bitrate de vídeo (mín. 516kbps), de áudio (mín. 64kbps) e proporção exata (retrato 9:16 / paisagem 16:9) — corrige automaticamente só o que não passar.</p>' +
+      '<div class="mock-banner">⚠️ Igual na aba Legendas: na primeira vez baixa o processador de vídeo (~25MB, fica salvo depois). Vídeos com áudio totalmente mudo recebem um dither na casa do próprio ruído de quantização digital (inaudível — não é um ruído perceptível) só pra ter uma faixa de áudio real; o alvo de bitrate fica só um pouco acima do mínimo pedido pela plataforma, sem exagero. Vídeo quadrado (1:1) é tratado como retrato e vira 9:16.</div>';
 
     var formBlock = document.createElement("div");
     formBlock.className = "config-block";
@@ -5482,6 +5545,11 @@
       '<h3>Vídeos</h3>' +
       '<label>Selecione um ou vários vídeos (mp4/webm/mov)</label>' +
       '<input type="file" id="brVideoInput" accept="video/*" multiple />' +
+      '<label style="margin-top:14px">Quando a proporção precisar ser corrigida</label>' +
+      '<select id="brFitSelect">' +
+        '<option value="cover">Preencher a tela — corta as sobras (sem barras pretas)</option>' +
+        '<option value="contain">Encaixar o vídeo inteiro — completa com barras pretas</option>' +
+      '</select>' +
       '<div id="brFileList" style="margin-top:14px"></div>' +
       '<div class="form-actions" style="margin-top:14px">' +
         '<button type="button" class="btn-primary gen-lote-btn" id="brRunBtn" disabled>⬆️ Escolha os vídeos primeiro</button>' +
@@ -5490,6 +5558,7 @@
     wrap.appendChild(formBlock);
 
     var videoInput = formBlock.querySelector("#brVideoInput");
+    var fitSelect = formBlock.querySelector("#brFitSelect");
     var fileListEl = formBlock.querySelector("#brFileList");
     var runBtn = formBlock.querySelector("#brRunBtn");
     var hint = formBlock.querySelector("#brHint");
@@ -5518,7 +5587,7 @@
 
     runBtn.addEventListener("click", function(){
       if(!items.length) return;
-      runBtn.disabled = true; videoInput.disabled = true;
+      runBtn.disabled = true; videoInput.disabled = true; fitSelect.disabled = true;
       hint.textContent = "";
       var zipFiles = [];
       var okCount = 0, fixedCount = 0, errCount = 0;
@@ -5530,14 +5599,15 @@
           runBtn.textContent = "Verificando "+(idx+1)+"/"+items.length+"... 0%";
           return renderBitrateFixBlob(it.file, function(t){
             runBtn.textContent = "Verificando "+(idx+1)+"/"+items.length+"... "+Math.round(t*100)+"%";
-          });
+          }, fitSelect.value);
         }).then(function(result){
           if(result.fixed){
             it.status = "fixed";
             fixedCount++;
             var parts = [];
-            if(result.fixedVideo) parts.push("vídeo");
-            if(result.fixedAudio) parts.push("áudio");
+            if(result.fixedVideo) parts.push("bitrate de vídeo");
+            if(result.fixedAudio) parts.push("bitrate de áudio");
+            if(result.fixedAspect) parts.push("proporção → "+result.aspectLabel);
             it.detail = "corrigido: "+parts.join(" + ");
           } else {
             it.status = "ok";
@@ -5561,7 +5631,7 @@
         }
         hint.textContent = okCount+" já ok · "+fixedCount+" corrigido(s)"+(errCount?(" · "+errCount+" com erro"):"");
       }).then(function(){
-        runBtn.disabled = false; videoInput.disabled = false;
+        runBtn.disabled = false; videoInput.disabled = false; fitSelect.disabled = false;
         runBtn.textContent = "🔎 Verificar e corrigir ("+items.length+")";
       });
     });
